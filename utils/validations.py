@@ -42,22 +42,22 @@ def valid_decimal(text):
 		#Primeiro etapa: verifica existir apenas um separado, é invalido 12.39.2
 		if len(parts) > 2:
 			#print("Invalid value")
-			print("Valor invalido")
+			print("Valor inválido")
 			#o continue garante uma nova tentativa ao utilizador
 			continue
 		
 		#Segunda etapa: verificar se a parte inteira é um numero positivo
 		if not parts[0].isdecimal():
-			print("Valor invalido")
+			print("Valor inválido")
 			continue
 
 		#Terceira etapa: verificar se a parte decimal tem apenas dois digitos e digitos são validos
 		if len(parts) == 2:
 			if not parts[1].isdecimal():
-				print("Valor invalido")
+				print("Valor inválido")
 				continue
 			if len(parts[1]) > 2:
-				print("Valor invalido")
+				print("Valor inválido")
 				continue
 		
 		#Quarta etapa: limitar o tamanho do valor,
@@ -82,16 +82,20 @@ def valid_integer(text, min=None, max=None):
 		# Não aceita caracteres, espacos e numero decimais
 		# isdecimal() é uma função que verifica ss os caracteres são numero entre 0 e 9
 		if not value.isdecimal():
-			print("Valor invalido")
+			print("Valor inválido")
 			continue
 		
 		#Converte o str do input para int
 		num = int(value)
 
+		# Caso o valor tenha um limite de maximo e minino,
+		# essa condição valida isso,
+		# como o valor minino de pessoa para reserva é 1 e maximo é 8
+		# mas se nao exista o limite, o valor default é none
 		if min is not None and num < min:
-			pass
+			print (f"O valor mínino é de: {min}")
 		elif max is not None and num > max:
-			pass
+			print (f"O valor máximo é de: {max}")
 		else:
 			return num
 
