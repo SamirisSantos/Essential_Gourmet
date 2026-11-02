@@ -20,8 +20,53 @@ All data is stored in a local SQLite database, and any unexpected error is wirtt
 
 ### Installation
 
-git clone <https://github.com/SamirisSantos/Essecial_Gourmet.git>
+```
+git clone <https://github.com/SamirisSantos/Essential_Gourmet.git>
+```
+
+### Runnig the application
+
+```
+python main.py
+```
+
+On the first run, the `data/`folder and the database table are created automatically
+
+### Project structure
+
+```
+├── main.py                  # main menu
+├── README.md
+├── db/
+│   └── database.py          # database connection and schema
+├── modules/
+│   ├── customers.py         # customer management
+│   ├── rooms.py             # room and employee management
+│   └── reservations.py      # reservations and availability
+├── utils/
+│   ├── config.py            # shared constants
+│   ├── logger.py            # error log setup
+│   └── validations.py       # shared input validation
+└── data/                    # created automatically
+    ├── data.db
+    └── errors.log
+```
+
+## Features
+
+**Customers**
 
 
+**Rooms**
+
+
+**Reservations**
+
+
+**General**
+
+------
+
+👩‍💻 Samiris Santos — [LinkedIn](https://www.linkedin.com/in/samiris-santos/)
 
 *Python Programming | Data Analysis course | CEASE Digital*
