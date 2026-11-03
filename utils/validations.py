@@ -15,9 +15,9 @@ def valid_text(text):
 			return value
 		else:
 			# print("This field can't be empty")
-			print("Campo vazio")
+			print("Preencha o campo vazio")
 
-# --- As funçõe abaixo vai verifica numero valido positivo,
+# --- As funções abaixo vão verificar numero valido positivo,
 # --- Por que sempre positivo?
 # --- Se trata de numero de quantidade de pessoas,
 # --- numero de reservas, quantidade de assentos,
@@ -93,11 +93,65 @@ def valid_integer(text, min=None, max=None):
 		# como o valor minino de pessoa para reserva é 1 e maximo é 8
 		# mas se nao exista o limite, o valor default é none
 		if min is not None and num < min:
-			print (f"O valor mínino é de: {min}")
+			print (f"Insira o valor válido maior que: {min}")
 		elif max is not None and num > max:
-			print (f"O valor máximo é de: {max}")
+			print (f"Insira o valor válido menor que: {max}")
 		else:
 			return num
 
+# --- As funções abaixo vão verificar formato de data e hora
+# --- Converte para o formato valido para guarda no banco de dados
+# --- --- --- --- ---- ---- --- 
+# --- Formatos de data e hora utilizado pelo datatime
+# --- %Y = Ano (YYYY)
+# --- %m = Mês (MM)
+# --- %d = Dia (DD)
+# --- %H = Hora (HH)
+# --- %M = Minutos (MM)
+# --- %S = Segundos (SS)
+# --- --- --- --- ---- ---- --- 
+# --- Formato usado no SQLite
+# --- Data: YYYY-MM-DD
+# --- Hora: HH:MM:SS
+
+def valid_date(text):
+	#Essa função valida a entrada de data 
+	while True:
+		value = input(text).strip()
+		try:
+			# Aqui verifica se o formato passado pelo utilizador segue os formato DD/MM/YYYY
+			# strptime() converte texto em data/hora e valida
+			date = datetime.strptime(value, "%d/%m/%Y")
+			# Converte para o formato valido do banco de dados
+			# strftime() converte data/hora em texto no formato pretendido
+			return date.strftime("%Y-%m-%d")
+		except:
+			# Caso o formato nao é valido pedi para o usuário escreve de novo
+			# e mostra como deve ser inserido a data
+			print("Data inválida! Use o formato DD/MM/YYYY.")
+
+def valid_time(text):
+	#Essa função valida a entrada de hora
+	# Segue a mesma logica da função valid_date
+	while True:
+		value = input(text).strip()
+		try:
+			time = datetime.strptime(value,"%H:%M")
+			return time.strftime("%H:%M:%S")
+		except ValueError:
+			print("Hora inválida! Use o formato HH:MM.")
 
 
+# --- A função abaixo vai verificar as opções usadas
+# --- Como por exemplo SEXO: M, F, O, fora isso nao é valido
+
+def valid_option(text, op):
+	# recebe a mensagem para input e a lista de opção
+	while True:
+		# upper() Deixa a str maiúscula
+		value = input(text).strip().upper()
+		# verifica se entrada do usuario é um opção valida.
+		for option in op:
+			if value == option.upper():
+				return option
+		print(f"Opção invalida. Escolha uma dessa opções: {', '.join(op)}.")
