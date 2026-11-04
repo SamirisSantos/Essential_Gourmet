@@ -20,30 +20,31 @@ def insert_room():
 	# a quantiade de assentos na sala tem que ser no minino 1,
 	# por regra nenhuma uma sala deve exisiti sem assentos
 	capacity = validations.valid_integer("Quantidade de assentos: ", min=1)
+	# valor da sala
 	cost = validations.valid_decimal("Valor da sala: ")
+	# funcionario responsavel
+	empoloyee = validations.valid_text("Funcionário responsável: ")
 	
-	# TODO: Ligar à base de dados e inserir a sala.
-
-	# lastrowid retorna o ID da ultima linha inserida
-	# nesse caso vai retorna o ID da sala, 
-	# para atriburir chave estrageira na tabela dos funcionarios responsavel pela sala
-	room_id = cursor.lastrowid 
-	#Quantidade de funcionarios responsavel pela sala e os nomes
-	qnt = validations.valid_integer("Quantidade de funcionário: ", min=1)
-	empoloyees = []
-
-	i = 0
-
-	while i < qnt:
-		name = validations.valid_text(f"Nome do funcionario {i+1}: ")
-		cursor.execute(f"INSERT INTO employees (name, room_id) VALUES ('{name}', {room_id})")
-	# TODO: Ligar e add funcionarios na base de dados
+	#Adicionar dados na tabela
+	cursor.execute(f"INSERT INTO rooms (theme, capacity, cost, employee) VALUES('{theme}', {capacity}, {cost}, '{empoloyee}')")
 
 
 def list_room():
 	# Lista todas as salas registradas,
-	# incluindo a capacidade, custo e funcionário responsável
-	pass
+	cursor.execute("SELECT * FROM rooms")
+	# fetchall busca todos os conjuntos de dados
+	res = cursor.fetchall()
+
+	# Pecorrer as linhas da tabela e imprimi formatado para melhor visualizacao.
+	# sala[1] = sala x, coluna 1
+	for sala in res:
+		print(f"""
+		Sala: {sala[1].upper()} \n
+		Capacidade: {sala[2]} pessoas \n
+		Custo: {sala[3]:.2f} € \n
+		Funcionario responsavel:{sala[4]}
+		-------------------------
+		""")
 
 def get_room():
 	pass
