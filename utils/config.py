@@ -23,12 +23,13 @@ DATA_DIR.mkdir(exist_ok=True)
 # Arquivo do database
 DB_PATH = DATA_DIR / "data.db"
 # Pasta dos log de erro
-LOG_PATH = DATA_DIR / "errors.txt" 
+LOG_PATH = DATA_DIR / "log.txt" 
 
 # Variveis globais:
 # preco do menu
 MENU_PRICE = 220.0
-# Valor maximo da capacidade de cada sala e cadastro de sala
+# Valor maximo e min da capacidade de cada sala e cadastro de sala
+MIN = 1
 MAX = 100
 # Padrao de data e hora utilizado em Portugal
 DATE_FORMAT = "%d/%m/%Y"
