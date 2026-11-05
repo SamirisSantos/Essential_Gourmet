@@ -1,6 +1,7 @@
 # Esse arquivo contem as funções de validações de input inciais
 
-import math, datetime
+import datetime
+from utils.config import DATE_FORMAT, TIME_FORMAT
 
 def valid_text(text):
 	#Solicita um texto que nao esteja vazio,
@@ -93,9 +94,9 @@ def valid_integer(text, min=None, max=None):
 		# como o valor minino de pessoa para reserva é 1 e maximo é 8
 		# mas se nao exista o limite, o valor default é none
 		if min is not None and num < min:
-			print (f"Insira o valor válido maior que: {min}")
+			print (f"Insira o valor igual ou maior que: {min}")
 		elif max is not None and num > max:
-			print (f"Insira o valor válido menor que: {max}")
+			print (f"Insira o valor igual ou menor que: {max}")
 		else:
 			return num
 
@@ -113,6 +114,9 @@ def valid_integer(text, min=None, max=None):
 # --- Formato usado no SQLite
 # --- Data: YYYY-MM-DD
 # --- Hora: HH:MM:SS
+# --- --- --- --- ---- ---- --- 
+#  DATE_FORMAT variavel global configurada em config.py
+#  TIME_FORMAT variavel global configurada em config.py
 
 def valid_date(text):
 	#Essa função valida a entrada de data 
@@ -121,11 +125,11 @@ def valid_date(text):
 		try:
 			# Aqui verifica se o formato passado pelo utilizador segue os formato DD/MM/YYYY
 			# strptime() converte texto em data/hora e valida
-			date = datetime.strptime(value, "%d/%m/%Y")
+			date = datetime.strptime(value,  DATE_FORMAT)
 			# Converte para o formato valido do banco de dados
 			# strftime() converte data/hora em texto no formato pretendido
 			return date.strftime("%Y-%m-%d")
-		except:
+		except ValueError:
 			# Caso o formato nao é valido pedi para o usuário escreve de novo
 			# e mostra como deve ser inserido a data
 			print("Data inválida! Use o formato DD/MM/YYYY.")
@@ -136,7 +140,7 @@ def valid_time(text):
 	while True:
 		value = input(text).strip()
 		try:
-			time = datetime.strptime(value,"%H:%M")
+			time = datetime.strptime(value,TIME_FORMAT)
 			return time.strftime("%H:%M:%S")
 		except ValueError:
 			print("Hora inválida! Use o formato HH:MM.")
