@@ -1,5 +1,5 @@
 # Base de dados e LOGs
-data/
+# data/
 
 # Ficheiros temporários do Python
 __pycache__/
