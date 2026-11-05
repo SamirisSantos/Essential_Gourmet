@@ -28,7 +28,7 @@ LOG_PATH = DATA_DIR / "errors.txt"
 MENU_PRICE = 220.0
 # Padrao de data e hora utilizado em Portugal
 DATE_FORMAT = "%d/%m/%Y"
-DATETIME_FORMAT = "%d/%m/%Y %H:%M"
+TIME_FORMAT = "%H:%M"
 
 # --- Formatos de data e hora utilizado pelo datatime
 # --- %Y = Ano (YYYY)
