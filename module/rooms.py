@@ -13,17 +13,25 @@ import sqlite3
 from db.database import ligar #TODO
 from utils.logger import register_error #TODO
 from utils import validations
+from utils.config import MAX
 
 def insert_room(theme, capacity, cost, employee):
 	# Guarda a sala no BD. Devolve o ide novo, ou None se der erro
-	pass
+	# Usar VALUES(?, ?) evita erro de insercao do SQL por causa do uso do apostrofos no meio da str.
+	try:
+		with ligar() as connection:
+			cursor = connection.execute("INSERT INTO sala (tematica,capacidade, funcionarios, custo) VALUES (?, ?, ?, ?)",
+										(theme,capacity,employee,cost))
+	except sqlite3.Error as error:
+		register_error("rooms.insert_room", error)
+		return None
 
 def add_room():
 	#Solicida ao usuario os dados da sala e guarda
 	theme = validations.valid_text("Nome da sala: ")
 	# a quantiade de assentos na sala tem que ser no minino 1,
 	# por regra nenhuma uma sala deve exisiti sem assentos
-	capacity = validations.valid_integer("Quantidade de assentos: ", min=1)
+	capacity = validations.valid_integer("Quantidade de assentos: ", min=1, max=MAX)
 	# valor da sala
 	cost = validations.valid_decimal("Valor da sala: ")
 	# funcionario responsavel

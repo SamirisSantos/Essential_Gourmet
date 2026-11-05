@@ -25,7 +25,11 @@ DB_PATH = DATA_DIR / "data.db"
 # Pasta dos log de erro
 LOG_PATH = DATA_DIR / "errors.txt" 
 
+# Variveis globais:
+# preco do menu
 MENU_PRICE = 220.0
+# Valor maximo da capacidade de cada sala e cadastro de sala
+MAX = 100
 # Padrao de data e hora utilizado em Portugal
 DATE_FORMAT = "%d/%m/%Y"
 TIME_FORMAT = "%H:%M"
