@@ -9,13 +9,17 @@
 #python -m module.rooms
 
 # Importacao de modulos necessarios
+import sqlite3
 from db.database import ligar #TODO
 from utils.logger import register_error #TODO
 from utils import validations
 
-def insert_room():
-	#Solicitar os dados de uma nova sala, valida os dados e insere na tabela
-	# e no fim atribui o funcionario
+def insert_room(theme, capacity, cost, employee):
+	# Guarda a sala no BD. Devolve o ide novo, ou None se der erro
+	pass
+
+def add_room():
+	#Solicida ao usuario os dados da sala e guarda
 	theme = validations.valid_text("Nome da sala: ")
 	# a quantiade de assentos na sala tem que ser no minino 1,
 	# por regra nenhuma uma sala deve exisiti sem assentos
@@ -23,10 +27,9 @@ def insert_room():
 	# valor da sala
 	cost = validations.valid_decimal("Valor da sala: ")
 	# funcionario responsavel
-	empoloyee = validations.valid_text("Funcionário responsável: ")
-	
-	#Adicionar dados na tabela
-	cursor.execute(f"INSERT INTO rooms (theme, capacity, cost, employee) VALUES('{theme}', {capacity}, {cost}, '{empoloyee}')")
+	employee = validations.valid_text("Funcionário responsável: ")
+	if insert_room(theme, capacity, cost, employee) is None:
+		print("Nao foi possivel")
 
 
 def list_room():

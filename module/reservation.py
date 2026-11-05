@@ -1,0 +1,1 @@
+from utils.config import MENU_PRICE
