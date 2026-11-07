@@ -1,6 +1,6 @@
 # Esse arquivo contem as funções de validações de input inciais
 
-import datetime
+from datetime import datetime
 from utils.config import DATE_FORMAT, TIME_FORMAT
 
 def valid_text(text):

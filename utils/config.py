@@ -29,11 +29,13 @@ LOG_PATH = DATA_DIR / "log.txt"
 # preco do menu
 MENU_PRICE = 220.0
 # Valor maximo e min da capacidade de cada sala e cadastro de sala
-MIN = 1
-MAX = 100
+MIN_CAPACITY = 1
+MAX_CAPACITY = 100
 # Padrao de data e hora utilizado em Portugal
 DATE_FORMAT = "%d/%m/%Y"
 TIME_FORMAT = "%H:%M"
+# Tempo de reserva, tempo em horas
+RESERVATION_DURATION = 3 #hr
 
 # --- Formatos de data e hora utilizado pelo datatime
 # --- %Y = Ano (YYYY)

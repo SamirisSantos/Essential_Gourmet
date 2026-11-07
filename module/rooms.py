@@ -11,9 +11,9 @@
 # Importacao de modulos necessarios
 import sqlite3
 from db.database import ligar #TODO
-from utils.logger import register_error #TODO
+from utils.logger import register_error
 from utils import validations
-from utils.config import MAX, MIN
+from utils.config import MAX_CAPACITY, MIN_CAPACITY
 
 def insert_room(theme, capacity, cost, employee):
 	# Guarda a sala no BD. Devolve o ide novo, ou None se der erro
@@ -25,13 +25,19 @@ def insert_room(theme, capacity, cost, employee):
 	except sqlite3.Error as error:
 		register_error("rooms.insert_room", error)
 		return None
+	# with para gerir a ligação e 
+	# finally para garantir que ela é fechada
+	finally:
+		if connection:
+			connection.close()
+	
 
 def add_room():
 	#Solicida ao usuario os dados da sala e guarda
 	theme = validations.valid_text("Nome da sala: ")
 	# a quantiade de assentos na sala tem que ser no minino 1,
 	# por regra nenhuma uma sala deve exisiti sem assentos
-	capacity = validations.valid_integer("Quantidade de assentos: ", min=MIN, max=MAX)
+	capacity = validations.valid_integer("Quantidade de assentos: ", min=MIN_CAPACITY, max=MAX_CAPACITY)
 	# valor da sala
 	cost = validations.valid_decimal("Valor da sala: ")
 	# funcionario responsavel
@@ -56,6 +62,9 @@ def get_room(room_id):
 	except sqlite3.Error as error:
 		register_error("rooms.get_room", error)
 		return None
+	finally:
+		if connection:
+			connection.close()
 
 def get_all_rooms():
 	#Devolve a lista de todas as sala
@@ -71,10 +80,14 @@ def get_all_rooms():
 	except sqlite3.Error as error:
 		register_error("rooms.get_all_rooms", error)
 		return []
+	finally:
+		if connection:
+			connection.close()
 
 def list_room():
 	# Lista todas as salas registradas,
 	# De maneira mais visual para o usuário
+	res = get_all_rooms
 	for sala in res:
 		print(f"""
 		Numero da Sala: {sala['id']} \n
@@ -104,6 +117,9 @@ def update_room(room_id, theme, capacity, employee, cost):
 	except sqlite3.Error as error:
 		register_error("rooms.update_room", error)
 		return False
+	finally:
+		if connection:
+			connection.close()
 
 def edit_room():
 	# Conversa com usuário para verificar quais campos deseja alterar
@@ -115,7 +131,7 @@ def edit_room():
 	list_room()
 	# Repete a pergunta até existir uma sala com esse id (0 para cancelar)
 	while True:
-		room_id = validations.valid_integer("Id da sala a editar (0 para cancelar): ", min=0, max=999999)
+		room_id = validations.valid_integer("Id da sala a editar (0 para cancelar): ", min=MIN_CAPACITY, max=MAX_CAPACITY)
 		if room_id == 0:
 			return
 		room = get_room(room_id)
@@ -140,7 +156,7 @@ def edit_room():
 		elif option == 1:
 			room["tematica"] = validations.valid_text("Nova temática: ")
 		elif option == 2:
-			room["capacidade"] = validations.valid_integer("Novos assentos: ", min=1, max=100)
+			room["capacidade"] = validations.valid_integer("Novos assentos: ", min=MIN_CAPACITY, max=MAX_CAPACITY)
 		elif option == 3:
 			room["funcionarios"] = validations.valid_text("Novos funcionários (separados por vírgula): ")
 		else:
