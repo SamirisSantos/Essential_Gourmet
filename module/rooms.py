@@ -15,6 +15,26 @@ from . import rooms_db
 from utils import validations
 from utils.config import MAX_CAPACITY, MIN_CAPACITY
 
+def room_menu():
+	# Menu para realizar ações sobre salas
+	while True:
+		print("\n===== GESTÃO DE SALAS =====")
+		print("1 - Registar sala")
+		print("2 - Listar salas")
+		print("3 - Editar sala")
+		print("0 - Voltar ao menu principal")
+		opcao = input("Escolha uma opção: ").strip()
+		if opcao == "1":
+			add_room()
+		elif opcao == "2":
+			list_room()
+		elif opcao == "3":
+			edit_room()
+		elif opcao == "0":
+			break
+		else:
+			print("Opção inválida.")
+
 def add_room():
 	#Solicida ao usuario os dados da sala e guarda
 	theme = validations.valid_text("Nome da sala: ")

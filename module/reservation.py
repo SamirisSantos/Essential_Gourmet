@@ -12,6 +12,26 @@ from datetime import datetime
 from utils.config import MENU_PRICE, RESERVATION_DURATION
 from utils import validations
 
+def reservation_menu():
+	# Menu para realizar ações sobre reservas
+	while True:
+		print("\n===== GESTÃO DE RESERVAS =====")
+		print("1 - Criar reserva")
+		print("2 - Listar reservas")
+		print("3 - Cancelar reserva")
+		print("0 - Voltar ao menu principal")
+		opcao = input("Escolha uma opção: ").strip()
+		if opcao == "1":
+			create_reservation()
+		elif opcao == "2":
+			list_reservations()
+		elif opcao == "3":
+			cancel_reservation_menu()
+		elif opcao == "0":
+			break
+		else:
+			print("Opção inválida.")
+
 def create_reservation():
 	# Consulta os clientes registados na base de dados
 	clients = reservation_db.get_clients()

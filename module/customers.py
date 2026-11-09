@@ -11,6 +11,28 @@
 from . import clients_db
 from utils import validations
 
+def customers_menu():
+	while True:
+		print("\n===== GESTÃO DE CLIENTES =====")
+		print("1 - Registar cliente")
+		print("2 - Listar clientes")
+		print("3 - Pesquisar cliente")
+		print("4 - Editar cliente")
+		print("0 - Voltar ao menu principal")
+		opcao = input("Escolha uma opção: ").strip()
+		if opcao == "1":
+			add_client()
+		elif opcao == "2":
+			list_clients
+		elif opcao == "3":
+			search_client()
+		elif opcao == "4":
+			edit_client()
+		elif opcao == "0":
+			break
+		else:
+			print("Opção inválida.")
+
 def ask_nif(client_id=None):
 	#Solicita e valida o NIF do cliente
 	while True:
@@ -21,7 +43,6 @@ def ask_nif(client_id=None):
 			print("Este NIF já está registado.")
 		else:
 			return nif
-
 
 def show_client(client):
 	#Mostra os dados de um cliente

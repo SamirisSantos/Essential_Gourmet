@@ -2,6 +2,7 @@
 # Bibliotecas importadas
 import sqlite3
 from pathlib import Path
+from module import customers, rooms, reservation
 
 # Caminho principal do projeto
 BASE_DIR = Path(__file__).resolve().parent
@@ -83,7 +84,7 @@ def main():
 		option = input("Escolha uma opção: ").strip()
 
 		if option == "1":
-			print("Gestão de clientes")
+			pass
 
 		elif option == "2":
 			print("Gestão de salas")
