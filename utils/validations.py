@@ -159,3 +159,101 @@ def valid_option(text, op):
 			if value == option.upper():
 				return option
 		print(f"Opção invalida. Escolha uma dessa opções: {', '.join(op)}.")
+
+# --- As funções abaixo vão verificar os dados especificos dos clientes
+
+def valid_name(text):
+	#Valida o nome do cliente
+	while True:
+		value = valid_text(text)
+		#O nome deve ter pelo menos 3 caracteres e conter apenas letras e espaços
+		if len(value) < 3 or not all(char.isalpha() or char.isspace() for char in value):
+			print("Nome inválido. Insira um nome com pelo menos 3 letras.")
+		elif " " not in value:
+			print("Insira o nome e apelido do cliente.")
+		else:
+			return value
+
+
+def valid_birth_date(text):
+	#Valida a data de nascimento e a idade do cliente
+	while True:
+		value = valid_date(text)
+		#Converte a data recebida para conseguir calcular a idade
+		birth_date = datetime.strptime(value, "%Y-%m-%d")
+		today = datetime.now()
+
+		age = today.year - birth_date.year
+
+		#Verifica se o aniversário já aconteceu este ano
+		if (today.month, today.day) < (birth_date.month, birth_date.day):
+			age -= 1
+
+		if age < 18:
+			print("O cliente deve ter pelo menos 18 anos.")
+		elif age > 120:
+			print("Data de nascimento inválida.")
+		else:
+			return value
+
+
+def valid_nif(text):
+	#Valida o NIF do cliente
+	while True:
+		value = valid_text(text)
+		#O NIF deve ter exatamente 9 digitos
+		if len(value) != 9 or not value.isdecimal():
+			print("NIF inválido. Deve conter 9 dígitos.")
+			continue
+		#O primeiro digito deve pertencer aos prefixos válidos
+		if value[0] not in "1235689":
+			print("NIF inválido.")
+			continue
+
+		#Calcula o digito de controlo do NIF
+		total = 0
+		for i in range(8):
+			total += int(value[i]) * (9 - i)
+
+		check_digit = 11 - (total % 11)
+		if check_digit >= 10:
+			check_digit = 0
+		if check_digit != int(value[8]):
+			print("NIF inválido. Verifique os dígitos inseridos.")
+		else:
+			return value
+
+
+def valid_phone(text):
+	#Valida o número de telemóvel do cliente
+	while True:
+		value = valid_text(text)
+		#O telemóvel deve conter 9 digitos e começar com um prefixo válido
+		if len(value) != 9 or not value.isdecimal():
+			print("Telemóvel inválido. Deve conter 9 dígitos.")
+		elif value[:2] not in ("91", "92", "93", "96"):
+			print("Prefixo de telemóvel inválido.")
+		else:
+			return value
+
+
+def valid_email(text):
+	#Valida o email do cliente
+	while True:
+		value = valid_text(text)
+		#Verifica se o email tem os elementos básicos
+		if " " in value or "@" not in value:
+			print("Email inválido.")
+			continue
+
+		parts = value.split("@")
+		if len(parts) != 2 or not parts[0] or "." not in parts[1]:
+			print("Email inválido.")
+			continue
+
+		domain = parts[1].split(".")
+		if any(not part for part in domain):
+			print("Email inválido.")
+			continue
+		return value
+

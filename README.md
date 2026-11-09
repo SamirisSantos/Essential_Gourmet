@@ -1,72 +1,119 @@
-# Essencial Gourmet: Reservation Management
+# 🍽️ Essência Gourmet — Reservation Management System
 
-A console application in Python to manage costumers, thmed rooms and reservation for a dining restaurant
+A Python console application for managing customers, themed rooms, and reservations at a luxury fine-dining restaurant.
 
-This project was developed for the **Python Programming** modulo of the **Data Analysis** course at **CEASE Digital**.
+This project was developed as a **team project** for the **Python Programming** module of the **Data Analysis** course at **CEASE Digital**.
 
-## Description
+## 📖 About the Project
 
-Essencial Gourmet is a luxury restaurant that offers only tasting menus, serverd in themed rooms with a limited number of seats and dedicated staf. Reservations used to be handle by phone and paper notes, withc led to scheduling erros and overlapping bookings.
+**Essência Gourmet** is a fictional luxury restaurant specialising in exclusive tasting menus, served in themed rooms with limited seating capacity and dedicated staff.
 
-This applications helps the administrative team manege reservations in a simple and accurate way. It controls room availability, prevents bookings that exceed a room's capacity and calculates the total prices of each reservation automatically.
+Previously, reservations were managed manually through phone calls and paper records, which could lead to scheduling errors, overlapping bookings, and difficulties managing room availability.
 
-All data is stored in a local SQLite database, and any unexpected error is wirtten to a log file.
+This application aims to simplify and improve the restaurant's administrative processes by providing an organised system for managing customers, rooms, and reservations.
 
-## Instructions
+It checks room availability, prevents bookings that exceed room capacity or overlap with existing reservations, and automatically calculates the total reservation cost.
+
+All information is stored in a local **SQLite database**, while unexpected errors are recorded in a log file.
+
+## ✨ Features
+
+### Customers
+- Register new customers.
+- View and search customer information.
+- Update existing customer records.
+- Validate customer information before saving it.
+
+### Rooms
+- Register themed rooms.
+- View and update room information.
+- Manage room capacity, assigned staff, and costs.
+- Validate room information.
+
+### Reservations
+- Create new reservations.
+- View reservation details.
+- Check room availability based on capacity and reservation duration.
+- Prevent overlapping reservations.
+- Automatically calculate the total reservation cost.
+- Cancel existing reservations.
+
+### General
+- Interactive console-based menu.
+- Input validation.
+- SQLite database integration.
+- Automatic database initialisation on the first run.
+- Automatic insertion of test data during initialisation.
+- Error logging.
+
+## 🛠️ Technologies
+
+- **Python 3.11+**
+- **SQLite**
+- **SQL**
+- **Git & GitHub**
+
+## 🚀 Getting Started
 
 ### Requirements
 
-- Pyhton 3.11 or higher
+- Python 3.11 or higher
+- Git
 
 ### Installation
 
-```
-git clone <https://github.com/SamirisSantos/Essential_Gourmet.git>
+Clone the repository:
+
+```bash
+git clone https://github.com/SamirisSantos/Essential_Gourmet.git
 ```
 
-### Runnig the application
+Navigate to the project directory:
 
+```bash
+cd Essential_Gourmet
 ```
+
+### Running the Application
+
+Run the main file:
+
+```bash
 python main.py
 ```
 
-On the first run, the `data/`folder and the database table are created automatically
+On the first run, the application checks whether the database exists. If it does not, it creates the database, executes the SQL scripts to create the tables, and inserts the test data.
 
-### Project structure
+On subsequent runs, the existing database is reused, preventing the test data from being inserted again.
 
-```
-├── main.py                  # main menu
-├── README.md
+## 📁 Project Structure
+
+```text
+Essential_Gourmet/
+│
+├── main.py                  # Application entry point and main menu
+├── README.md                # Project documentation
+│
+├── data/
+│   ├── criar_tabelas.sql    # Database table creation script
+│   ├── dados_teste.sql      # Test data insertion script
+│   └── essencia_gourmet.db  # SQLite database (generated)
+│
 ├── db/
-│   └── database.py          # database connection and schema
+│   └── database.py          # Database connection
+│
 ├── modules/
-│   ├── customers.py         # customer management
-│   ├── rooms.py             # room and employee management
-│   └── reservations.py      # reservations and availability
-├── utils/
-│   ├── config.py            # shared constants
-│   ├── logger.py            # error log setup
-│   └── validations.py       # shared input validation
-└── data/                    # created automatically
-    ├── data.db
-    └── errors.log
+│   ├── customers.py         # Customer management
+│   ├── rooms.py             # Room management
+│   └── reservations.py      # Reservation management and availability
+│
+└── utils/
+    ├── config.py            # Shared constants and configuration
+    ├── logger.py            # Error logging
+    └── validations.py       # Input validation functions
 ```
 
-## Features
+## 👩‍💻
+**Samiris Santos** — [LinkedIn](https://www.linkedin.com/in/samiris-santos/)
 
-**Customers**
-
-
-**Rooms**
-
-
-**Reservations**
-
-
-**General**
-
-------
-
-👩‍💻 Samiris Santos — [LinkedIn](https://www.linkedin.com/in/samiris-santos/)
-
-*Python Programming | Data Analysis course | CEASE Digital*
+*Python Programming | Data Analysis Course | CEASE Digital*

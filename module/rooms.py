@@ -1,5 +1,6 @@
-#Gestão de Salas
+# Gestão de Salas - Interação com o Utilizador
 # Deve ser possível adicionar novas salas 
+# Responsavel por interagir com usuário
 # com as seguintes características:
 # • Quantidade de assentos (capacidade máxima de pessoas)
 # • Temática da sala (Glamour, Espelhos, Latino, Urbano, etc.)
@@ -9,28 +10,10 @@
 #python -m module.rooms
 
 # Importacao de modulos necessarios
-import sqlite3
-from db.database import ligar #TODO
-from utils.logger import register_error
+
+from . import rooms_db
 from utils import validations
 from utils.config import MAX_CAPACITY, MIN_CAPACITY
-
-def insert_room(theme, capacity, cost, employee):
-	# Guarda a sala no BD. Devolve o ide novo, ou None se der erro
-	# Usar VALUES(?, ?) evita erro de insercao do SQL por causa do uso do apostrofos no meio da str.
-	try:
-		with ligar() as connection:
-			cursor = connection.execute("INSERT INTO sala (tematica,capacidade, funcionarios, custo) VALUES (?, ?, ?, ?)",
-										(theme,capacity,employee,cost))
-	except sqlite3.Error as error:
-		register_error("rooms.insert_room", error)
-		return None
-	# with para gerir a ligação e 
-	# finally para garantir que ela é fechada
-	finally:
-		if connection:
-			connection.close()
-	
 
 def add_room():
 	#Solicida ao usuario os dados da sala e guarda
@@ -42,52 +25,13 @@ def add_room():
 	cost = validations.valid_decimal("Valor da sala: ")
 	# funcionario responsavel
 	employee = validations.valid_text("Funcionário responsável: ")
-	if insert_room(theme, capacity, cost, employee) is None:
+	if rooms_db.insert_room(theme, capacity, cost, employee) is None:
 		print("Nao foi possivel")
-
-def get_room(room_id):
-	#Essa função pega os dados de uma tabela e converte para um dicionário
-	#Devolve um sala
-	try:
-		with ligar() as connection:
-			#fetchone() busca e retorna a proxima linha do resultado de uma consulta em SQL
-			row = connection.execute("SELECT * FROM salas WHERE id=?", (room_id,)).fetchone()
-			#Encontra a sala, converte os dados para um dicionario, se nao conseguir retorna None
-			if row:
-				# dict() é uma função que permite criar 
-				# ou converter dados para um dicionário
-				return dict(row)
-			else:
-				return None
-	except sqlite3.Error as error:
-		register_error("rooms.get_room", error)
-		return None
-	finally:
-		if connection:
-			connection.close()
-
-def get_all_rooms():
-	#Devolve a lista de todas as sala
-	try:
-		with ligar() as connection:
-			rows = connection.execute("SELECT * FROM salas ORDER BY id").fetchall()
-		result = []
-		# Percorre os registos, 
-		# converte cada linha num dicionário e devolve uma lista.
-		for row in rows:
-			result.append(dict(row))
-		return result
-	except sqlite3.Error as error:
-		register_error("rooms.get_all_rooms", error)
-		return []
-	finally:
-		if connection:
-			connection.close()
 
 def list_room():
 	# Lista todas as salas registradas,
 	# De maneira mais visual para o usuário
-	res = get_all_rooms
+	res = rooms_db.get_all_rooms
 	for sala in res:
 		print(f"""
 		Numero da Sala: {sala['id']} \n
@@ -98,33 +42,10 @@ def list_room():
 		-------------------------
 		""")
 
-def update_room(room_id, theme, capacity, employee, cost):
-	# Atualiza todos os campos de uma sala
-	# Se tiver um linha alterada na tabela retorna True
-	# Vai apenas mexer na base de dados, nao fala com usuário
-	try:
-		with ligar() as connection:
-			cursor = connection.execute(
-				"""
-				UPDATE rooms
-				SET theme = ?, capacity = ?, employee = ?, cost = ?
-				WHERE room_id = ?
-				""",
-				(theme, capacity, employee, cost, room_id)
-			)
-			# Verifica se alguma linha foi alterada
-			return cursor.rowcount > 0
-	except sqlite3.Error as error:
-		register_error("rooms.update_room", error)
-		return False
-	finally:
-		if connection:
-			connection.close()
-
 def edit_room():
 	# Conversa com usuário para verificar quais campos deseja alterar
 	# Se não houver salas, não adianta pedir um id
-	if not get_all_rooms():
+	if not rooms_db.get_all_rooms():
 		print("Ainda não há salas registadas.")
 		return
 
@@ -134,7 +55,7 @@ def edit_room():
 		room_id = validations.valid_integer("Id da sala a editar (0 para cancelar): ", min=MIN_CAPACITY, max=MAX_CAPACITY)
 		if room_id == 0:
 			return
-		room = get_room(room_id)
+		room = rooms_db.get_room(room_id)
 		if room is not None:
 			# sala encontrada, sai deste ciclo
 			break
@@ -163,11 +84,11 @@ def edit_room():
 			room["custo"] = validations.valid_decimal("Novo valor da sala: ")
 
 		# Grava logo a alteração
-		if update_room(room["id"], room["tematica"], room["capacidade"],
+		if rooms_db.update_room(room["id"], room["tematica"], room["capacidade"],
 						room["funcionarios"], room["custo"]):
 			print("Sala atualizada com sucesso.")
 		else:
 			print("Não foi possível atualizar a sala.")
 
 		# Volta a ler a sala da BD, para o menu mostrar o que está realmente guardado
-		room = get_room(room["id"]) or room
+		room = rooms_db.get_room(room["id"]) or room

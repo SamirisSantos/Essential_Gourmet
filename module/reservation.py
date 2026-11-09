@@ -1,4 +1,5 @@
-#Reservas de Salas
+#Reservas de Salas - Interação com o Utilizador
+# Responsavel por interagir com usuário
 # Deve ser possível, efetuar uma marcação de reserva, indicando:
 # • Cliente associado
 # • Sala pretendida
@@ -6,147 +7,176 @@
 # • Quantidade de pessoas
 # • Valor total
 
-import sqlite3
-
-from db.database import ligar
-from utils.logger import register_error
+from . import reservation_db
+from datetime import datetime
 from utils.config import MENU_PRICE, RESERVATION_DURATION
-
-def add_reservation(id_cliente, id_room, res_date, res_time, num_people, total):
-	# Insere uma nova reserva no banco de dados
-	# Não tem interação com usuário
-	try:
-		with ligar() as connection:
-			cursor = connection.execute("""INSERT INTO reservas (id_cliente, id_sala, data_reserva, hora_reserva, num_pessoas,valor_total)
-			"VALUES (?, ?, ?, ?)""", (id_cliente, id_room, res_date, res_time, num_people, total))
-
-	except sqlite3.Error as error:
-		register_error("reservation.add_reservation", error)
-		return None
-	# with para gerir a ligaçãoo e 
-	# finally para garantir que ela é fechada
-	finally:
-		if connection:
-			connection.close()
-
-def get_all_reservations():
-	try:
-		with ligar() as connection:
-			res = connection.execute("""SELECT reservas.id, clientes.nome AS client_name, salas.tematica AS room_theme,
-					reservas.data_reserva, reservas.hora_reserva, reservas.num_pessoas,
-					reservas.valor_total, reservas.estado FROM reservas
-				INNER JOIN clientes
-					ON reservas.id_cliente = clientes.id
-				INNER JOIN salas
-					ON reservas.id_sala = salas.id
-				ORDER BY reservas.data_reserva, reservas.hora_reserva
-			""")
-		rows = res.fetchall()
-		# Converte o resultado em dicionario
-		reserva = []
-		for row in rows:
-			reserva.append(dict(row))
-		return reserva
-	except sqlite3.Error as error:
-		register_error("reservation.get_all_reservations", error)
-		return None
-	# with para gerir a ligaçãoo e 
-	# finally para garantir que ela é fechada
-	finally:
-		if connection:
-			connection.close()
-
-def get_reservation(reservation_id):
-	# Consulta apenas uma reserva
-	try:
-		with ligar() as connection:
-			res = connection.execute("SELECT * From reservas WHERE id = ?", (reservation_id))
-			# fetchone busca a procima linha do resultado da consulta
-			row = res.fetchone()
-			# Se tem a reserva devolve o valor se nao retorna None
-			if row:
-				return dict(row)
-			else:
-				return None
-	except sqlite3.Error as error:
-		register_error("reservation.get_reservation", error)
-		return None
-	# with para gerir a ligaçãoo e 
-	# finally para garantir que ela é fechada
-	finally:
-		if connection:
-			connection.close()
-
-def get_available_rooms(res_data, res_time, num_people):
-	try:
-		with ligar() as connection:
-			# Verifica se existe alguma sobreposição dos intervalo das reservas
-			# Assim sabendo se existe algum conflito quando uma reserva começa e a outra termina
-			# Pois uma reserva deve terminar antes que outra reserva comece
-			res = connection.execute(""" SELECT * FROM salas WHERE capacidade >= ?
-					AND NOT EXISTS (SELECT 1 FROM reservas WHERE reservas.id_sala = salas.id
-							AND reservas.estatos = 'Ativa')
-					-- Verifica se existe um conflito de horas com outras reserva ativas da mesma sala
-					-- Verifica se a reserva existente começa antes do fim da nova
-					-- (data/hora pretendida + a duração da nova reserva)
-					AND datetime( reservas.data_reserva || ' ' || reservas.hora_reserva
-							) < datetime( ? || ' ' || ?, '+' || ? || ' hours')
-
-					-- Verifica se a reserva existente termina depois do início da nova
-					-- Mesma logica de cima, mas para hora e data existente
-					AND datetime( reservas.data_reserva || ' ' || reservas.hora_reserva,
-						'+' || ? || ' hours') > datetime(? || ' ' || ?)
-				)
-				ORDER BY id
-			"""), (num_people, res_data, res_time, RESERVATION_DURATION,
-					RESERVATION_DURATION, res_data, res_time)
-		# Converte os resultados em dicionários
-		rows = res.fetchall()
-		available_rooms = []
-		for row in rows:
-			available_rooms.append(dict(row))
-	except sqlite3.Error as error:
-		register_error("reservation.get_available_rooms", error)
-		return []
-	# with para gerir a ligaçãoo e 
-	# finally para garantir que ela é fechada
-	finally:
-		if connection:
-			connection.close()
-	
-def cancel_reservation(reservation_id):
-	# Cancelamento de reserva
-	try:
-		with ligar() as connection:
-			# Cancela a reserva e altera apenas o status da reserva sem excluir definitivamente
-			# Essa é uma estrategia para manter dados de controle do restaurante caso necessário
-			res = connection.execute("""UPDATE reservas SET estado = 'Cancelada' 
-							WHERE  id = ? AND estado = 'Ativa'""", (reservation_id))
-			# confirma se a reserva foi cancelada corretamente
-			cancelled = res.rowcount > 0
-			return cancelled
-	except sqlite3.Error as error:
-		register_error("reservation.cancel_reservation", error)
-		return False
-	# with para gerir a ligaçãoo e 
-	# finally para garantir que ela é fechada
-	finally:
-		if connection:
-			connection.close()
+from utils import validations
 
 def create_reservation():
-	try:
-		with ligar() as connection:
-			res = connection.execute("SELECT id, nome FROM clientes ORDER BY nome")
-			clients = res.fetchall()
-	except sqlite3.Error as error:
-		register_error("reservation.create_reservation", error)
-		print("Unable to consult registered clients.")
-		return
-	finally:
-		if connection:
-			connection.close()
+	# Consulta os clientes registados na base de dados
+	clients = reservation_db.get_clients()
+	# Verifica se existem clientes registados
 	if not clients:
-		print("Cliente não cadastrado")
+		print("Ainda não existem clientes registados.")
 		return
-	
+	# Apresenta a lista de clientes
+	print("\n--- CLIENTES REGISTADOS ---")
+	for client in clients:
+		print(f"ID: {client['id']} | Nome: {client['nome']}")
+	# Solicita o ID do cliente que pretende fazer a reserva
+	client_id = validations.valid_integer("ID do cliente: ", min=1 )
+
+	# Verifica se o ID introduzido pertence a um cliente registado
+	client_exists = False
+
+	for client in clients:
+		if client["id"] == client_id:
+			client_exists = True
+			break
+
+	if not client_exists:
+		print("Cliente não encontrado.")
+		return
+
+	# Solicita a data e a hora pretendidas para a reserva
+	reservation_date = validations.valid_date("Data da reserva (DD/MM/AAAA): ")
+
+	reservation_time = validations.valid_time("Hora da reserva (HH:MM): ")
+
+	# Junta a data e a hora para verificar se a reserva
+	# não está marcada para uma data ou hora no passado
+	reservation_datetime = datetime.strptime(reservation_date + " " + reservation_time,"%Y-%m-%d %H:%M:%S")
+	if reservation_datetime < datetime.now():
+		print("Não é possível realizar uma reserva no passado.")
+		return
+	# Solicita a quantidade de pessoas para a reserva
+	num_people = validations.valid_integer( "Número de pessoas: ", min=1)
+
+	# Consulta as salas disponíveis de acordo com a data,
+	# hora e capacidade necessárias para a reserva
+	available_rooms = reservation_db.get_available_rooms( reservation_date, reservation_time, num_people)
+	# Verifica se existem salas disponíveis
+	if not available_rooms:
+		print("Não existem salas disponíveis para esta data e hora.")
+		return
+	# Apresenta as salas disponíveis
+	print("\n--- SALAS DISPONÍVEIS ---")
+
+	for room in available_rooms:
+		print(
+			f"ID: {room['id']} | "
+			f"Temática: {room['tematica']} | "
+			f"Capacidade: {room['capacidade']} pessoas | "
+			f"Custo da sala: {room['custo']:.2f} €"
+		)
+	# Solicita o ID da sala pretendida
+	room_id = validations.valid_integer( "Escolha o ID da sala: ", min=1 )
+
+	# Verifica se a sala escolhida pertence à lista
+	# de salas disponíveis para a reserva
+	selected_room = None
+	for room in available_rooms:
+		if room["id"] == room_id:
+			selected_room = room
+			break
+	if selected_room is None:
+		print("Sala inválida ou indisponível.")
+		return
+
+	# Calcula o valor total da reserva:
+	# Número de pessoas x preço do menu + custo da sala
+	total_value = (num_people * MENU_PRICE) + selected_room["custo"]
+	# Apresenta o resumo dos valores da reserva
+	print("\n--- RESUMO DA RESERVA ---")
+	print(f"Duração da reserva: {RESERVATION_DURATION} horas")
+	print(f"Preço do menu por pessoa: {MENU_PRICE:.2f} €")
+	print(f"Custo da sala: {selected_room['custo']:.2f} €")
+	print(f"Valor total: {total_value:.2f} €")
+	print(f"Valor por pessoa: {(total_value/num_people):.2f} €")
+
+	# Solicita a confirmação antes de guardar a reserva
+	confirmation = validations.valid_option( "Deseja confirmar a reserva? (S/N): ", ["S", "N"])
+	if confirmation == "N":
+		print("Reserva cancelada.")
+		return
+
+	# Guarda os dados da reserva na base de dados
+	reservation_id = reservation_db.add_reservation(client_id, room_id,reservation_date,
+		reservation_time,num_people, total_value)
+	# Verifica se a reserva foi registada com sucesso
+	if reservation_id:
+		print(f"Reserva registada com sucesso! ID: {reservation_id}")
+	else:
+		print("Não foi possível registar a reserva.")
+
+
+
+def list_reservations():
+	# Consulta todas as reservas registadas na base de dados
+	reservations = reservation_db.get_reservations()
+
+	# Verifica se existem reservas registadas
+	if not reservations:
+		print("Ainda não existem reservas registadas.")
+		return
+
+	# Apresenta a lista de reservas
+	print("\n--- LISTA DE RESERVAS ---")
+	for reservation in reservations:
+		print(
+			f"\nID: {reservation['id']}\n"
+			f"Cliente: {reservation['client_name']}\n"
+			f"Sala: {reservation['room_theme']}\n"
+			f"Data: {reservation['data_reserva']}\n"
+			f"Hora: {reservation['hora_reserva']}\n"
+			f"Número de pessoas: {reservation['num_pessoas']}\n"
+			f"Valor total: {reservation['valor_total']:.2f} €\n"
+			f"Estado: {reservation['estado']}"
+		)
+
+
+def cancel_reservation_menu():
+	# Consulta as reservas existentes na base de dados
+	reservations = reservation_db.get_reservations()
+	# Verifica se existem reservas para cancelar
+	if not reservations:
+		print("Ainda não existem reservas registadas.")
+		return
+
+	# Apresenta as reservas existentes
+	print("\n--- LISTA DE RESERVAS ---")
+	for reservation in reservations:
+		print(
+			f"\nID: {reservation['id']} | "
+			f"Cliente: {reservation['client_name']} | "
+			f"Sala: {reservation['room_theme']} | "
+			f"Data: {reservation['data_reserva']} | "
+			f"Hora: {reservation['hora_reserva']} | "
+			f"Estado: {reservation['estado']}"
+		)
+
+	# Solicita o ID da reserva que o utilizador pretende cancelar
+	reservation_id = validations.valid_integer( "\nID da reserva a cancelar: ", min=1)
+	# Consulta os dados da reserva selecionada
+	reservation = reservation_db.get_reservation(reservation_id)
+	# Verifica se a reserva existe
+	if reservation is None:
+		print("Reserva não encontrada.")
+		return
+	# Verifica se a reserva já foi cancelada anteriormente
+	if reservation["estado"] != "Ativa":
+		print("Esta reserva já se encontra cancelada.")
+		return
+	# Solicita a confirmação antes de cancelar a reserva
+	confirmation = validations.valid_option(
+		"Deseja confirmar o cancelamento? (S/N): ",
+		["S", "N"]
+	)
+	if confirmation == "N":
+		print("Cancelamento interrompido.")
+		return
+	# Atualiza o estado da reserva na base de dados
+	if reservation_db.cancel_reservation(reservation_id):
+		print("Reserva cancelada com sucesso.")
+	else:
+		print("Não foi possível cancelar a reserva.")
