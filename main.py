@@ -1,8 +1,26 @@
+# ============================================================
+# Projeto: Essência Gourmet
+# Descrição: Sistema de gestão de clientes, salas e reservas
+#
+# Curso: Análise de Dados
+# Módulo: Python Programming
+# Instituição: CEASE Digital
+#
+# Equipa:
+#   - Samiris Santos
+#   - João Carvalho
+#   - Gonçalo Santos
+#
+# ============================================================
 
 # Bibliotecas importadas
 import sqlite3
 from pathlib import Path
-from module import customers, rooms, reservation
+import os
+
+# Importação dos módulos da aplicação
+from module import cliente, sala, reserva
+from utils import validacoes 
 
 # Caminho principal do projeto
 BASE_DIR = Path(__file__).resolve().parent
@@ -15,19 +33,15 @@ SQL_TEST = DATA_DIR / "dados_teste.sql"
 
 
 def initialize_database():
-	"""
-	Verifica se a base de dados existe.
-	Caso não exista, cria as tabelas e insere os dados de teste.
-	"""
-
+	# Verifica se a base de dados existe.
+	# Caso não exista, cria as tabelas e insere os dados de teste.
 	# Verifica se a base de dados já existe
 	if DB_PATH.exists():
-		print("Base de dados encontrada.")
+	#print("Base de dados encontrada.")
 		return
-
-	print("Base de dados não encontrada.")
-	print("A inicializar a base de dados...")
-
+	#print("Base de dados não encontrada.")
+	#print("A inicializar a base de dados...")
+	
 	# Verifica se os scripts SQL existem
 	if not SQL_CREATE.exists() or not SQL_TEST.exists():
 		print("Erro: não foi possível encontrar os ficheiros SQL.")
@@ -49,20 +63,19 @@ def initialize_database():
 		with open(SQL_CREATE, "r", encoding="utf-8") as file:
 			connection.executescript(file.read())
 
-		print("Tabelas criadas com sucesso.")
+		#print("Tabelas criadas com sucesso.")
 
 		# Executa o script de inserção dos dados de teste
 		with open(SQL_TEST, "r", encoding="utf-8") as file:
 			connection.executescript(file.read())
-
-		print("Dados de teste inseridos com sucesso.")
-
+		#print("Dados de teste inseridos com sucesso.")
+	
 	except sqlite3.Error as error:
 		print(f"Erro ao inicializar a base de dados: {error}")
-
+	
 	except OSError as error:
 		print(f"Erro ao ler os ficheiros SQL: {error}")
-
+	
 	finally:
 		if connection:
 			connection.close()
@@ -74,6 +87,7 @@ def main():
 
 	# Menu principal
 	while True:
+		validacoes.limpar()
 		print("\n========== ESSÊNCIA GOURMET ==========")
 		print("1 - Gestão de clientes")
 		print("2 - Gestão de salas")
@@ -84,18 +98,17 @@ def main():
 		option = input("Escolha uma opção: ").strip()
 
 		if option == "1":
-			pass
-
+			validacoes.limpar()
+			cliente.menu_clientes()
 		elif option == "2":
-			print("Gestão de salas")
-
+			validacoes.limpar()
+			sala.menu_salas()
 		elif option == "3":
-			print("Gestão de reservas")
-
+			validacoes.limpar()
+			reserva.menu_reservas()
 		elif option == "0":
 			print("A encerrar a aplicação...")
 			break
-
 		else:
 			print("Opção inválida. Tente novamente.")
 
