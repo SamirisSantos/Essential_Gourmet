@@ -1,138 +1,138 @@
-#Reservas de Salas  - Base de Dados
-# Este ficheiro contém as funções responsáveis pelas operações SQL
-# relacionadas com a gestão das reservas, incluindo consultar clientes,
-# inserir, consultar, verificar disponibilidade e cancelar reservas.
-# Não contém interação direta com o utilizador.
+# Reservas de Salas - Interação com o Utilizador
+# Responsável por interagir com o utilizador
+# Deve ser possível efetuar uma marcação de reserva, indicando:
+# • Cliente associado
+# • Sala pretendida
+# • Data e hora da marcação
+# • Quantidade de pessoas
+# • Valor total
 
 import sqlite3
 
 from db.database import ligar
-from utils.logger import register_error
-from utils.config import RESERVATION_DURATION
-from .customers_db import get_all_clients as get_clients
+from utils.logger import registar_erro
+from utils.config import DURACAO_RESERVA
 
-def add_reservation(id_cliente, id_room, res_date, res_time, num_people, total):
+def adicionar_reserva(id_cliente, id_sala, data_reserva, hora_reserva, num_pessoas, total):
 	# Insere uma nova reserva na base de dados
-	# Não tem interação direta com o utilizador
+	ligacao = None
 	try:
-		connection = None
-
-		with ligar() as connection:
-			cursor = connection.execute(""" INSERT INTO reservas
+		with ligar() as ligacao:
+			cursor = ligacao.execute("""
+				INSERT INTO reservas
 				(id_cliente, id_sala, data_reserva, hora_reserva, num_pessoas, valor_total)
 				VALUES (?, ?, ?, ?, ?, ?)
-			""", (id_cliente, id_room, res_date, res_time, num_people, total))
+			""", (id_cliente, id_sala, data_reserva, hora_reserva, num_pessoas, total))
 			# Devolve o ID da reserva inserida
 			return cursor.lastrowid
-	except sqlite3.Error as error:
-		register_error("reservation_db.add_reservation", error)
+	except sqlite3.Error as erro:
+		registar_erro("reserva_db.adicionar_reserva", erro)
 		return None
 	finally:
-		if connection:
-			connection.close()
+		if ligacao:
+			ligacao.close()
 
-def get_all_reservations():
+
+def obter_todas_reservas():
+	# Consulta todas as reservas, com o nome do cliente e a temática da sala
+	ligacao = None
 	try:
-		with ligar() as connection:
-			res = connection.execute("""SELECT reservas.id, clientes.nome AS client_name, salas.tematica AS room_theme,
+		with ligar() as ligacao:
+			cursor = ligacao.execute("""
+				SELECT reservas.id, clientes.nome AS nome_cliente, salas.tematica AS tematica_sala,
 					reservas.data_reserva, reservas.hora_reserva, reservas.num_pessoas,
-					reservas.valor_total, reservas.estado FROM reservas
-				INNER JOIN clientes
-					ON reservas.id_cliente = clientes.id
-				INNER JOIN salas
-					ON reservas.id_sala = salas.id
+					reservas.valor_total, reservas.estado
+				FROM reservas
+				INNER JOIN clientes ON reservas.id_cliente = clientes.id
+				INNER JOIN salas ON reservas.id_sala = salas.id
 				ORDER BY reservas.data_reserva, reservas.hora_reserva
 			""")
-		rows = res.fetchall()
-		# Converte o resultado em dicionario
-		reserva = []
-		for row in rows:
-			reserva.append(dict(row))
-		return reserva
-	except sqlite3.Error as error:
-		register_error("reservation.get_all_reservations", error)
-		return None
-	# with para gerir a ligaçãoo e 
-	# finally para garantir que ela é fechada
+			linhas = cursor.fetchall()
+		# Converte os resultados numa lista de dicionários
+		reservas = []
+		for linha in linhas:
+			reservas.append(dict(linha))
+		return reservas
+	except sqlite3.Error as erro:
+		registar_erro("reserva_db.obter_todas_reservas", erro)
+		return []
 	finally:
-		if connection:
-			connection.close()
+		if ligacao:
+			ligacao.close()
 
-def get_reservation(reservation_id):
-	# Consulta apenas uma reserva
+
+def obter_reserva(reserva_id):
+	# Consulta apenas uma reserva através do seu ID
+	ligacao = None
 	try:
-		with ligar() as connection:
-			res = connection.execute("SELECT * From reservas WHERE id = ?", (reservation_id,))
-			# fetchone busca a proxima linha do resultado da consulta
-			row = res.fetchone()
-			# Se tem a reserva devolve o valor se nao retorna None
-			# Converte o registo num dicionário
-			if row:
-				return dict(row)
-			else:
-				return None
-	except sqlite3.Error as error:
-		register_error("reservation.get_reservation", error)
+		with ligar() as ligacao:
+			linha = ligacao.execute(
+				"SELECT * FROM reservas WHERE id = ?", (reserva_id,)).fetchone()
+			# Se encontrar a reserva, converte o registo num dicionário
+			if linha:
+				return dict(linha)
+			return None
+	except sqlite3.Error as erro:
+		registar_erro("reserva_db.obter_reserva", erro)
 		return None
-	# with para gerir a ligaçãoo e 
-	# finally para garantir que ela é fechada
 	finally:
-		if connection:
-			connection.close()
+		if ligacao:
+			ligacao.close()
 
-def get_available_rooms(res_data, res_time, num_people):
+
+def obter_salas_disponiveis(data_reserva, hora_reserva, num_pessoas):
+	# Devolve as salas com capacidade suficiente e sem reservas ativas sobrepostas.
+	# Uma reserva existente sobrepõe-se à nova se:
+	#   - começa antes do fim da nova (data/hora pretendida + duração) E
+	#   - termina depois do início da nova.
+	# Assim, uma reserva tem de terminar antes de outra começar.
+	ligacao = None
 	try:
-		with ligar() as connection:
-			# Verifica se existe alguma sobreposição dos intervalo das reservas
-			# Assim sabendo se existe algum conflito quando uma reserva começa e a outra termina
-			# Pois uma reserva deve terminar antes que outra reserva comece
-			res = connection.execute(""" SELECT * FROM salas WHERE capacidade >= ?
-					AND NOT EXISTS (SELECT 1 FROM reservas WHERE reservas.id_sala = salas.id
-							AND reservas.estatos = 'Ativa')
-					-- Verifica se existe um conflito de horas com outras reserva ativas da mesma sala
-					-- Verifica se a reserva existente começa antes do fim da nova
-					-- (data/hora pretendida + a duração da nova reserva)
-					AND datetime( reservas.data_reserva || ' ' || reservas.hora_reserva
-							) < datetime( ? || ' ' || ?, '+' || ? || ' hours')
-
-					-- Verifica se a reserva existente termina depois do início da nova
-					-- Mesma logica de cima, mas para hora e data existente
-					AND datetime( reservas.data_reserva || ' ' || reservas.hora_reserva,
+		with ligar() as ligacao:
+			cursor = ligacao.execute("""
+				SELECT * FROM salas
+				WHERE capacidade >= ?
+				AND NOT EXISTS (
+					SELECT 1 FROM reservas
+					WHERE reservas.id_sala = salas.id
+					AND reservas.estado = 'Ativa'
+					AND datetime(reservas.data_reserva || ' ' || reservas.hora_reserva)
+						< datetime(? || ' ' || ?, '+' || ? || ' hours')
+					AND datetime(reservas.data_reserva || ' ' || reservas.hora_reserva,
 						'+' || ? || ' hours') > datetime(? || ' ' || ?)
 				)
 				ORDER BY id
-			"""), (num_people, res_data, res_time, RESERVATION_DURATION,
-					RESERVATION_DURATION, res_data, res_time)
-		# Converte os resultados em dicionários
-		rows = res.fetchall()
-		available_rooms = []
-		for row in rows:
-			available_rooms.append(dict(row))
-	except sqlite3.Error as error:
-		register_error("reservation.get_available_rooms", error)
+			""", (num_pessoas, data_reserva, hora_reserva, DURACAO_RESERVA,
+					DURACAO_RESERVA, data_reserva, hora_reserva))
+			linhas = cursor.fetchall()
+		# Converte os resultados numa lista de dicionários
+		salas = []
+		for linha in linhas:
+			salas.append(dict(linha))
+		return salas
+	except sqlite3.Error as erro:
+		registar_erro("reserva_db.obter_salas_disponiveis", erro)
 		return []
-	# with para gerir a ligaçãoo e 
-	# finally para garantir que ela é fechada
 	finally:
-		if connection:
-			connection.close()
-	
-def cancel_reservation(reservation_id):
-	# Cancelamento de reserva
+		if ligacao:
+			ligacao.close()
+
+
+def desativar_reserva(reserva_id):
+	# Cancela a reserva mudando só o estado, sem a apagar.
+	# Assim ficam os dados de controlo do restaurante, caso sejam precisos.
+	ligacao = None
 	try:
-		with ligar() as connection:
-			# Cancela a reserva e altera apenas o status da reserva sem excluir definitivamente
-			# Essa é uma estrategia para manter dados de controle do restaurante caso necessário
-			res = connection.execute("""UPDATE reservas SET estado = 'Cancelada' 
-							WHERE  id = ? AND estado = 'Ativa'""", (reservation_id,))
-			# confirma se a reserva foi cancelada corretamente
-			cancelled = res.rowcount > 0
-			return cancelled
-	except sqlite3.Error as error:
-		register_error("reservation.cancel_reservation", error)
+		with ligar() as ligacao:
+			cursor = ligacao.execute("""
+				UPDATE reservas SET estado = 'Cancelada'
+				WHERE id = ? AND estado = 'Ativa'
+			""", (reserva_id,))
+			# Confirma se a reserva foi cancelada
+			return cursor.rowcount > 0
+	except sqlite3.Error as erro:
+		registar_erro("reserva_db.desativar_reserva", erro)
 		return False
-	# with para gerir a ligaçãoo e 
-	# finally para garantir que ela é fechada
 	finally:
-		if connection:
-			connection.close()
+		if ligacao:
+			ligacao.close()

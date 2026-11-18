@@ -1,91 +1,88 @@
 # Gestão de Salas - Base de Dados
-# Este ficheiro contém as funções 
-# responsáveis pelas operações SQL
-# relacionadas com a gestão das salas, 
-# incluindo inserir, consultar
+# Este ficheiro contém as funções responsáveis pelas operações SQL
+# relacionadas com a gestão das salas, incluindo inserir, consultar
 # e atualizar os registos na base de dados.
 
-#python -m module.rooms
-
-# Importacao de modulos necessarios
+# Importação de módulos necessários
 import sqlite3
+
 from db.database import ligar
-from utils.logger import register_error
+from utils.logger import registar_erro
 
-def insert_room(theme, capacity, cost, employee):
-	# Guarda a sala no BD. Devolve o ide novo, ou None se der erro
-	# Usar VALUES(?, ?) evita erro de insercao do SQL por causa do uso do apostrofos no meio da str.
-	try:
-		with ligar() as connection:
-			cursor = connection.execute("INSERT INTO sala (tematica,capacidade, funcionarios, custo) VALUES (?, ?, ?, ?)",
-										(theme,capacity,employee,cost))
-	except sqlite3.Error as error:
-		register_error("rooms.insert_room", error)
-		return None
-	# with para gerir a ligação e 
-	# finally para garantir que ela é fechada
-	finally:
-		if connection:
-			connection.close()
 
-def get_room(room_id):
-	#Essa função pega os dados de uma tabela e converte para um dicionário
-	#Devolve um sala
+def inserir_sala(tematica, capacidade, funcionarios, custo):
+	# Guarda a sala na BD. Devolve o ID novo, ou None se der erro
+	# Usar VALUES (?, ?) evita erros de SQL por causa de apóstrofos no texto
+	ligacao = None
 	try:
-		with ligar() as connection:
-			#fetchone() busca e retorna a proxima linha do resultado de uma consulta em SQL
-			row = connection.execute("SELECT * FROM salas WHERE id=?", (room_id,)).fetchone()
-			#Encontra a sala, converte os dados para um dicionario, se nao conseguir retorna None
-			if row:
-				# dict() é uma função que permite criar 
-				# ou converter dados para um dicionário
-				return dict(row)
-			else:
-				return None
-	except sqlite3.Error as error:
-		register_error("rooms.get_room", error)
+		with ligar() as ligacao:
+			cursor = ligacao.execute(
+				"INSERT INTO salas (tematica, capacidade, funcionarios, custo) VALUES (?, ?, ?, ?)",
+				(tematica, capacidade, funcionarios, custo))
+			# Devolve o ID da sala inserida
+			return cursor.lastrowid
+	except sqlite3.Error as erro:
+		registar_erro("sala_db.inserir_sala", erro)
 		return None
 	finally:
-		if connection:
-			connection.close()
+		if ligacao:
+			ligacao.close()
 
-def get_all_rooms():
-	#Devolve a lista de todas as sala
+
+def obter_sala(sala_id):
+	# Devolve uma sala em formato de dicionário, ou None se não existir
+	ligacao = None
 	try:
-		with ligar() as connection:
-			rows = connection.execute("SELECT * FROM salas ORDER BY id").fetchall()
-		result = []
-		# Percorre os registos, 
-		# converte cada linha num dicionário e devolve uma lista.
-		for row in rows:
-			result.append(dict(row))
-		return result
-	except sqlite3.Error as error:
-		register_error("rooms.get_all_rooms", error)
+		with ligar() as ligacao:
+			linha = ligacao.execute(
+				"SELECT * FROM salas WHERE id = ?", (sala_id,)).fetchone()
+			# Se encontrar a sala, converte o registo num dicionário
+			if linha:
+				return dict(linha)
+			return None
+	except sqlite3.Error as erro:
+		registar_erro("sala_db.obter_sala", erro)
+		return None
+	finally:
+		if ligacao:
+			ligacao.close()
+
+
+def obter_todas_salas():
+	# Devolve a lista de todas as salas
+	ligacao = None
+	try:
+		with ligar() as ligacao:
+			linhas = ligacao.execute("SELECT * FROM salas ORDER BY id").fetchall()
+		# Converte cada linha num dicionário e devolve uma lista
+		salas = []
+		for linha in linhas:
+			salas.append(dict(linha))
+		return salas
+	except sqlite3.Error as erro:
+		registar_erro("sala_db.obter_todas_salas", erro)
 		return []
 	finally:
-		if connection:
-			connection.close()
+		if ligacao:
+			ligacao.close()
 
-def update_room(room_id, theme, capacity, employee, cost):
+
+def atualizar_sala(sala_id, tematica, capacidade, funcionarios, custo):
 	# Atualiza todos os campos de uma sala
-	# Se tiver um linha alterada na tabela retorna True
-	# Vai apenas mexer na base de dados, nao fala com usuário
+	# Devolve True se alguma linha foi alterada
+	ligacao = None
 	try:
-		with ligar() as connection:
-			cursor = connection.execute(
-				"""
-				UPDATE rooms
-				SET theme = ?, capacity = ?, employee = ?, cost = ?
-				WHERE room_id = ?
-				""",
-				(theme, capacity, employee, cost, room_id)
-			)
+		with ligar() as ligacao:
+			cursor = ligacao.execute("""
+				UPDATE salas
+				SET tematica = ?, capacidade = ?, funcionarios = ?, custo = ?
+				WHERE id = ?
+			""", (tematica, capacidade, funcionarios, custo, sala_id))
 			# Verifica se alguma linha foi alterada
 			return cursor.rowcount > 0
-	except sqlite3.Error as error:
-		register_error("rooms.update_room", error)
+	except sqlite3.Error as erro:
+		registar_erro("sala_db.atualizar_sala", erro)
 		return False
 	finally:
-		if connection:
-			connection.close()
+		if ligacao:
+			ligacao.close()

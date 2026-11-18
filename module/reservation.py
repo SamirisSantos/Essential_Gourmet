@@ -1,20 +1,24 @@
-#Reservas de Salas - Interação com o Utilizador
-# Responsavel por interagir com usuário
-# Deve ser possível, efetuar uma marcação de reserva, indicando:
+# Reservas de Salas - Interação com o Utilizador
+# Responsável por interagir com o utilizador
+# Deve ser possível efetuar uma marcação de reserva, indicando:
 # • Cliente associado
 # • Sala pretendida
 # • Data e hora da marcação
 # • Quantidade de pessoas
 # • Valor total
 
-from . import reservation_db
 from datetime import datetime
-from utils.config import MENU_PRICE, RESERVATION_DURATION
-from utils import validations
 
-def reservation_menu():
+from . import reserva_db
+from .cliente_db import obter_todos_clientes
+from .cliente import adicionar_cliente, listar_clientes
+from utils.config import PRECO_MENU, DURACAO_RESERVA
+from utils import validacoes
+
+def menu_reservas():
 	# Menu para realizar ações sobre reservas
 	while True:
+		#validacoes.limpar()
 		print("\n===== GESTÃO DE RESERVAS =====")
 		print("1 - Criar reserva")
 		print("2 - Listar reservas")
@@ -22,181 +26,190 @@ def reservation_menu():
 		print("0 - Voltar ao menu principal")
 		opcao = input("Escolha uma opção: ").strip()
 		if opcao == "1":
-			create_reservation()
+			validacoes.limpar()
+			criar_reserva()
 		elif opcao == "2":
-			list_reservations()
+			#validacoes.limpar()
+			consultar_reservas()
 		elif opcao == "3":
-			cancel_reservation_menu()
+			validacoes.limpar()
+			cancelar_reserva()
 		elif opcao == "0":
 			break
 		else:
 			print("Opção inválida.")
 
-def create_reservation():
+def criar_reserva():
 	# Consulta os clientes registados na base de dados
-	clients = reservation_db.get_clients()
+	clientes = obter_todos_clientes()
 	# Verifica se existem clientes registados
-	if not clients:
+	if not clientes:
 		print("Ainda não existem clientes registados.")
 		return
 	# Apresenta a lista de clientes
 	print("\n--- CLIENTES REGISTADOS ---")
-	for client in clients:
-		print(f"ID: {client['id']} | Nome: {client['nome']}")
+	for cliente in clientes:
+		print(f"ID: {cliente['id']} | Nome: {cliente['nome']}")
 	# Solicita o ID do cliente que pretende fazer a reserva
-	client_id = validations.valid_integer("ID do cliente: ", min=1 )
-
+	cliente_id = validacoes.validar_inteiro("ID do cliente: ", minimo=1)
 	# Verifica se o ID introduzido pertence a um cliente registado
-	client_exists = False
-
-	for client in clients:
-		if client["id"] == client_id:
-			client_exists = True
+	cliente_existe = False
+	for cliente in clientes:
+		if cliente["id"] == cliente_id:
+			cliente_existe = True
 			break
-
-	if not client_exists:
-		print("Cliente não encontrado.")
+	if not cliente_existe:
+		print("\nCliente não encontrado.")
 		return
 
 	# Solicita a data e a hora pretendidas para a reserva
-	reservation_date = validations.valid_date("Data da reserva (DD/MM/AAAA): ")
-
-	reservation_time = validations.valid_time("Hora da reserva (HH:MM): ")
+	data_reserva = validacoes.validar_data("Data da reserva (DD/MM/AAAA): ")
+	hora_reserva = validacoes.validar_hora("Hora da reserva (HH:MM): ")
 
 	# Junta a data e a hora para verificar se a reserva
 	# não está marcada para uma data ou hora no passado
-	reservation_datetime = datetime.strptime(reservation_date + " " + reservation_time,"%Y-%m-%d %H:%M:%S")
-	if reservation_datetime < datetime.now():
-		print("Não é possível realizar uma reserva no passado.")
+	data_hora_reserva = datetime.strptime(data_reserva + " " + hora_reserva, "%Y-%m-%d %H:%M:%S")
+	if data_hora_reserva < datetime.now():
+		print("\nNão é possível realizar uma reserva no passado.")
 		return
-	# Solicita a quantidade de pessoas para a reserva
-	num_people = validations.valid_integer( "Número de pessoas: ", min=1)
 
+	# Solicita a quantidade de pessoas para a reserva
+	num_pessoas = validacoes.validar_inteiro("Número de pessoas: ", minimo=1)
 	# Consulta as salas disponíveis de acordo com a data,
 	# hora e capacidade necessárias para a reserva
-	available_rooms = reservation_db.get_available_rooms( reservation_date, reservation_time, num_people)
+	salas_disponiveis = reserva_db.obter_salas_disponiveis(data_reserva, hora_reserva, num_pessoas)
 	# Verifica se existem salas disponíveis
-	if not available_rooms:
-		print("Não existem salas disponíveis para esta data e hora.")
+	if not salas_disponiveis:
+		print("\nNão existem salas disponíveis para esta data e hora.")
 		return
+	
 	# Apresenta as salas disponíveis
 	print("\n--- SALAS DISPONÍVEIS ---")
-
-	for room in available_rooms:
+	for sala in salas_disponiveis:
 		print(
-			f"ID: {room['id']} | "
-			f"Temática: {room['tematica']} | "
-			f"Capacidade: {room['capacidade']} pessoas | "
-			f"Custo da sala: {room['custo']:.2f} €"
+			f"ID: {sala['id']} | "
+			f"Temática: {sala['tematica']} | "
+			f"Capacidade: {sala['capacidade']} pessoas | "
+			f"Custo da sala: {sala['custo']:.2f} €"
 		)
+
 	# Solicita o ID da sala pretendida
-	room_id = validations.valid_integer( "Escolha o ID da sala: ", min=1 )
+	sala_id = validacoes.validar_inteiro("Escolha o ID da sala: ", minimo=1)
 
 	# Verifica se a sala escolhida pertence à lista
 	# de salas disponíveis para a reserva
-	selected_room = None
-	for room in available_rooms:
-		if room["id"] == room_id:
-			selected_room = room
+	sala_escolhida = None
+	for sala in salas_disponiveis:
+		if sala["id"] == sala_id:
+			sala_escolhida = sala
 			break
-	if selected_room is None:
+
+	if sala_escolhida is None:
 		print("Sala inválida ou indisponível.")
 		return
 
 	# Calcula o valor total da reserva:
 	# Número de pessoas x preço do menu + custo da sala
-	total_value = (num_people * MENU_PRICE) + selected_room["custo"]
+	valor_total = (num_pessoas * PRECO_MENU) + sala_escolhida["custo"]
+
 	# Apresenta o resumo dos valores da reserva
 	print("\n--- RESUMO DA RESERVA ---")
-	print(f"Duração da reserva: {RESERVATION_DURATION} horas")
-	print(f"Preço do menu por pessoa: {MENU_PRICE:.2f} €")
-	print(f"Custo da sala: {selected_room['custo']:.2f} €")
-	print(f"Valor total: {total_value:.2f} €")
-	print(f"Valor por pessoa: {(total_value/num_people):.2f} €")
+	print(f"Duração da reserva: {DURACAO_RESERVA} horas")
+	print(f"Preço do menu por pessoa: {PRECO_MENU:.2f} €")
+	print(f"Custo da sala: {sala_escolhida['custo']:.2f} €")
+	print(f"Valor total: {valor_total:.2f} €")
+	print(f"Valor por pessoa: {(valor_total / num_pessoas):.2f} €")
 
 	# Solicita a confirmação antes de guardar a reserva
-	confirmation = validations.valid_option( "Deseja confirmar a reserva? (S/N): ", ["S", "N"])
-	if confirmation == "N":
+	confirmacao = validacoes.validar_opcao("Deseja confirmar a reserva? (S/N): ", ["S", "N"])
+	if confirmacao == "N":
 		print("Reserva cancelada.")
 		return
 
 	# Guarda os dados da reserva na base de dados
-	reservation_id = reservation_db.add_reservation(client_id, room_id,reservation_date,
-		reservation_time,num_people, total_value)
+	reserva_id = reserva_db.adicionar_reserva(
+		cliente_id, sala_id, data_reserva, hora_reserva, num_pessoas, valor_total)
+
 	# Verifica se a reserva foi registada com sucesso
-	if reservation_id:
-		print(f"Reserva registada com sucesso! ID: {reservation_id}")
+	if reserva_id:
+		print(f"Reserva registada com sucesso! ID: {reserva_id}")
 	else:
 		print("Não foi possível registar a reserva.")
 
 
-
-def list_reservations():
+def consultar_reservas():
 	# Consulta todas as reservas registadas na base de dados
-	reservations = reservation_db.get_reservations()
+	reservas = reserva_db.obter_todas_reservas()
 
 	# Verifica se existem reservas registadas
-	if not reservations:
+	if not reservas:
 		print("Ainda não existem reservas registadas.")
 		return
 
 	# Apresenta a lista de reservas
 	print("\n--- LISTA DE RESERVAS ---")
-	for reservation in reservations:
+	for reserva in reservas:
 		print(
-			f"\nID: {reservation['id']}\n"
-			f"Cliente: {reservation['client_name']}\n"
-			f"Sala: {reservation['room_theme']}\n"
-			f"Data: {reservation['data_reserva']}\n"
-			f"Hora: {reservation['hora_reserva']}\n"
-			f"Número de pessoas: {reservation['num_pessoas']}\n"
-			f"Valor total: {reservation['valor_total']:.2f} €\n"
-			f"Estado: {reservation['estado']}"
+			f"\nID: {reserva['id']}\n"
+			f"Cliente: {reserva['nome_cliente']}\n"
+			f"Sala: {reserva['tematica_sala']}\n"
+			f"Data: {reserva['data_reserva']}\n"
+			f"Hora: {reserva['hora_reserva']}\n"
+			f"Número de pessoas: {reserva['num_pessoas']}\n"
+			f"Valor total: {reserva['valor_total']:.2f} €\n"
+			f"Valor por pessoa: {(reserva['valor_total'] / reserva['num_pessoas']):.2f} €\n"
+			f"Estado: {reserva['estado']}"
 		)
 
 
-def cancel_reservation_menu():
+def cancelar_reserva():
 	# Consulta as reservas existentes na base de dados
-	reservations = reservation_db.get_reservations()
+	reservas = reserva_db.obter_todas_reservas()
+
 	# Verifica se existem reservas para cancelar
-	if not reservations:
+	if not reservas:
 		print("Ainda não existem reservas registadas.")
 		return
 
 	# Apresenta as reservas existentes
 	print("\n--- LISTA DE RESERVAS ---")
-	for reservation in reservations:
+	for reserva in reservas:
 		print(
-			f"\nID: {reservation['id']} | "
-			f"Cliente: {reservation['client_name']} | "
-			f"Sala: {reservation['room_theme']} | "
-			f"Data: {reservation['data_reserva']} | "
-			f"Hora: {reservation['hora_reserva']} | "
-			f"Estado: {reservation['estado']}"
+			f"\nID: {reserva['id']} | "
+			f"Cliente: {reserva['nome_cliente']} | "
+			f"Sala: {reserva['tematica_sala']} | "
+			f"Data: {reserva['data_reserva']} | "
+			f"Hora: {reserva['hora_reserva']} | "
+			f"Estado: {reserva['estado']}"
 		)
 
 	# Solicita o ID da reserva que o utilizador pretende cancelar
-	reservation_id = validations.valid_integer( "\nID da reserva a cancelar: ", min=1)
+	reserva_id = validacoes.validar_inteiro("\nID da reserva a cancelar: ", minimo=1)
+
 	# Consulta os dados da reserva selecionada
-	reservation = reservation_db.get_reservation(reservation_id)
+	reserva = reserva_db.obter_reserva(reserva_id)
+
 	# Verifica se a reserva existe
-	if reservation is None:
+	if reserva is None:
 		print("Reserva não encontrada.")
 		return
+
 	# Verifica se a reserva já foi cancelada anteriormente
-	if reservation["estado"] != "Ativa":
+	if reserva["estado"] != "Ativa":
 		print("Esta reserva já se encontra cancelada.")
 		return
+
 	# Solicita a confirmação antes de cancelar a reserva
-	confirmation = validations.valid_option(
+	confirmacao = validacoes.validar_opcao(
 		"Deseja confirmar o cancelamento? (S/N): ",
 		["S", "N"]
 	)
-	if confirmation == "N":
-		print("Cancelamento interrompido.")
+	if confirmacao == "N":
+		print("Cancelamento não realizado.")
 		return
+
 	# Atualiza o estado da reserva na base de dados
-	if reservation_db.cancel_reservation(reservation_id):
+	if reserva_db.desativar_reserva(reserva_id):
 		print("Reserva cancelada com sucesso.")
 	else:
 		print("Não foi possível cancelar a reserva.")

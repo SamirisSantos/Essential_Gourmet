@@ -8,136 +8,155 @@
 # • Email
 
 # Importação de módulos necessários
-from . import clients_db
-from utils import validations
+from . import cliente_db
+from utils import validacoes 
 
-def customers_menu():
+# Menu para realizar ações sobre clientes
+def menu_clientes():
 	while True:
+		#validacoes.limpar()
 		print("\n===== GESTÃO DE CLIENTES =====")
 		print("1 - Registar cliente")
-		print("2 - Listar clientes")
+		print("2 - Consultar clientes")
 		print("3 - Pesquisar cliente")
 		print("4 - Editar cliente")
 		print("0 - Voltar ao menu principal")
 		opcao = input("Escolha uma opção: ").strip()
 		if opcao == "1":
-			add_client()
+			validacoes.limpar()
+			adicionar_cliente()
 		elif opcao == "2":
-			list_clients
+			validacoes.limpar()
+			listar_clientes()
 		elif opcao == "3":
-			search_client()
+			validacoes.limpar()
+			pesquisar_cliente()
 		elif opcao == "4":
-			edit_client()
+			validacoes.limpar()
+			editar_cliente()
 		elif opcao == "0":
 			break
 		else:
 			print("Opção inválida.")
 
-def ask_nif(client_id=None):
-	#Solicita e valida o NIF do cliente
-	while True:
-		nif = validations.valid_nif("NIF: ")
 
-		#Verifica se o NIF já existe na base de dados
-		if clients_db.nif_exists(nif, client_id):
+def pedir_nif_unico(cliente_id=0):
+	# Solicita e valida o NIF do cliente
+	while True:
+		nif = validacoes.validar_nif("NIF: ")
+
+		# Verifica se o NIF já existe na base de dados
+		if cliente_db.nif_existe(nif, cliente_id):
 			print("Este NIF já está registado.")
 		else:
 			return nif
 
-def show_client(client):
-	#Mostra os dados de um cliente
+
+def mostrar_cliente(cliente):
+	# Mostra os dados de um cliente
 	print("\n--- DADOS DO CLIENTE ---")
-	print(f"ID: {client['id']}")
-	print(f"Nome: {client['nome']}")
-	print(f"Data de nascimento: {client['data_nascimento']}")
-	print(f"Sexo: {client['sexo']}")
-	print(f"NIF: {client['nif']}")
-	print(f"Telemóvel: {client['telemovel']}")
-	print(f"Email: {client['email']}")
+	print("-" * 40)
+	print(f"ID:                 {cliente['id']}")
+	print(f"Nome:               {cliente['nome']}")
+	print(f"Data de nascimento: {cliente['data_nascimento']}")
+	print(f"Sexo:               {cliente['sexo']}")
+	print(f"NIF:                {cliente['nif']}")
+	print(f"Telemóvel:          {cliente['telemovel']}")
+	print(f"Email:              {cliente['email']}")
 
 
-def add_client():
-	#Solicita os dados para registar um novo cliente
-	print("\n--- REGISTRA CLIENTE ---")
+def adicionar_cliente():
+	# Solicita os dados para registar um novo cliente
+	print("\n--- ADICIONAR CLIENTE ---")
 
-	name = validations.valid_name("Nome completo: ")
-	birth_date = validations.valid_birth_date("Data de nascimento (DD/MM/YYYY): ")
-	sex = validations.valid_option("Sexo (M/F/O): ", ["M", "F", "O"])
-	nif = ask_nif()
-	phone = validations.valid_phone("Telemóvel: ")
-	email = validations.valid_email("Email: ")
+	nome = validacoes.validar_nome("Nome completo: ")
+	data_nascimento = validacoes.validar_data_nascimento("Data de nascimento (DD/MM/YYYY): ")
+	sexo = validacoes.validar_opcao("Sexo (M/F/O): ", ["M", "F", "O"])
+	nif = pedir_nif_unico()
+	telemovel = validacoes.validar_telemovel("Telemóvel: ")
+	email = validacoes.validar_email("Email: ")
 
-	#Envia os dados para a base de dados
-	client_id = clients_db.add_client(
-		name, birth_date, sex, nif, phone, email
-	)
+	# Envia os dados para a base de dados
+	cliente_id = cliente_db.aguardar_cliente(
+		nome, data_nascimento, sexo, nif, telemovel, email)
 
-	if client_id is not None:
-		print(f"\nCliente registado com sucesso! ID: {client_id}")
+	if cliente_id is not None:
+		print(f"\nCliente guardado com sucesso!")
 	else:
 		print("Não foi possível registar o cliente.")
 
 
-def list_clients():
-	#Consulta e mostra todos os clientes registados
+def listar_clientes():
+	# Consulta e mostra todos os clientes registados
 	print("\n--- LISTA DE CLIENTES ---")
 
-	clients = clients_db.get_all_clients()
+	clientes = cliente_db.obter_todos_clientes()
 
-	if not clients:
-		print("Não existem clientes registados.")
+	if not clientes:
+		print("Ainda não há clientes registados.")
 		return
 
-	for client in clients:
-		show_client(client)
+	for cliente in clientes:
+		mostrar_cliente(cliente)
+	print("-" * 40)
+	print("Total:", len(clientes), "cliente(s)")
 
-
-def edit_client():
-	#Procura o cliente e solicita os novos dados
+def editar_cliente():
+	# Procura o cliente e solicita os novos dados
 	print("\n--- EDITAR CLIENTE ---")
 
-	nif = validations.valid_nif("Insira o NIF do cliente: ")
-	client = clients_db.get_client_by_nif(nif)
+	nif = validacoes.validar_nif("Insira o NIF do cliente: ")
+	cliente = cliente_db.procurar_por_nif(nif)
 
-	if client is None:
+	if cliente is None:
 		print("Cliente não encontrado.")
 		return
 
-	show_client(client)
+	mostrar_cliente(cliente)
 
 	print("\nInsira os novos dados do cliente:")
 
-	name = validations.valid_name("Nome completo: ")
-	birth_date = validations.valid_birth_date("Data de nascimento (DD/MM/YYYY): ")
-	sex = validations.valid_option("Sexo (M/F/O): ", ["M", "F", "O"])
-	nif = ask_nif(client["id"])
-	phone = validations.valid_phone("Telemóvel: ")
-	email = validations.valid_email("Email: ")
+	nome = validacoes.validar_nome("Nome completo: ")
+	data_nascimento = validacoes.validar_data_nascimento("Data de nascimento (DD/MM/YYYY): ")
+	sexo = validacoes.validar_opcao("Sexo (M/F/O): ", ["M", "F", "O"])
+	nif = pedir_nif_unico(cliente["id"])
+	telemovel = validacoes.validar_telemovel("Telemóvel: ")
+	email = validacoes.validar_email("Email: ")
 
-	#Atualiza os dados na base de dados
-	updated = clients_db.update_client(
-		client["id"], name, birth_date, sex, nif, phone, email
+	# Atualiza os dados na base de dados
+	atualizado = cliente_db.atualizar_cliente(
+		cliente["id"], nome, data_nascimento, sexo, nif, telemovel, email
 	)
 
-	if updated:
+	if atualizado:
 		print("Dados do cliente atualizados com sucesso!")
 	else:
 		print("Não foi possível atualizar os dados do cliente.")
 
 
-def search_client():
-	#Permite pesquisar um cliente pelo NIF ou nome
+def pesquisar_cliente():
+	# Permite pesquisar um cliente pelo NIF ou nome
 	print("\n--- PESQUISAR CLIENTE ---")
 	print("1 - Pesquisar por NIF")
 	print("2 - Pesquisar por nome")
 
-	option = validations.valid_option("Escolha uma opção: ", ["1", "2"])
+	opcao = validacoes.validar_opcao("Escolha uma opção: ", ["1", "2"])
 
-	if option == "1":
-		nif = validations.valid_nif("Insira o NIF: ")
-		client = clients_db.get_client_by_nif(nif)
+	if opcao == "1":
+		nif = validacoes.validar_nif("Insira o NIF: ")
+		cliente = cliente_db.obter_cliente_por_nif(nif)
 
-		if client:
-			show_client(client)
+		if cliente:
+			mostrar_cliente(cliente)
 		else:
 			print("Cliente não encontrado.")
+	else:
+		nome = input("Insira o nome (ou parte dele): ").strip()
+		clientes = cliente_db.obter_clientes_por_nome(nome)
+
+		if not clientes:
+			print("Nenhum cliente encontrado.")
+			return
+
+		for cliente in clientes:
+			mostrar_cliente(cliente)
