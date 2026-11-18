@@ -8,13 +8,13 @@
 # • Email
 
 # Importação de módulos necessários
-from . import cliente_db
-from utils import validacoes 
+from . import customers_db
+from utils import validations 
 
 # Menu para realizar ações sobre clientes
 def menu_clientes():
 	while True:
-		#validacoes.limpar()
+		#validations.limpar()
 		print("\n===== GESTÃO DE CLIENTES =====")
 		print("1 - Registar cliente")
 		print("2 - Consultar clientes")
@@ -23,16 +23,16 @@ def menu_clientes():
 		print("0 - Voltar ao menu principal")
 		opcao = input("Escolha uma opção: ").strip()
 		if opcao == "1":
-			validacoes.limpar()
+			validations.limpar()
 			adicionar_cliente()
 		elif opcao == "2":
-			validacoes.limpar()
+			validations.limpar()
 			listar_clientes()
 		elif opcao == "3":
-			validacoes.limpar()
+			validations.limpar()
 			pesquisar_cliente()
 		elif opcao == "4":
-			validacoes.limpar()
+			validations.limpar()
 			editar_cliente()
 		elif opcao == "0":
 			break
@@ -43,10 +43,10 @@ def menu_clientes():
 def pedir_nif_unico(cliente_id=0):
 	# Solicita e valida o NIF do cliente
 	while True:
-		nif = validacoes.validar_nif("NIF: ")
+		nif = validations.validar_nif("NIF: ")
 
 		# Verifica se o NIF já existe na base de dados
-		if cliente_db.nif_existe(nif, cliente_id):
+		if customers_db.nif_existe(nif, cliente_id):
 			print("Este NIF já está registado.")
 		else:
 			return nif
@@ -69,15 +69,15 @@ def adicionar_cliente():
 	# Solicita os dados para registar um novo cliente
 	print("\n--- ADICIONAR CLIENTE ---")
 
-	nome = validacoes.validar_nome("Nome completo: ")
-	data_nascimento = validacoes.validar_data_nascimento("Data de nascimento (DD/MM/YYYY): ")
-	sexo = validacoes.validar_opcao("Sexo (M/F/O): ", ["M", "F", "O"])
+	nome = validations.validar_nome("Nome completo: ")
+	data_nascimento = validations.validar_data_nascimento("Data de nascimento (DD/MM/YYYY): ")
+	sexo = validations.validar_opcao("Sexo (M/F/O): ", ["M", "F", "O"])
 	nif = pedir_nif_unico()
-	telemovel = validacoes.validar_telemovel("Telemóvel: ")
-	email = validacoes.validar_email("Email: ")
+	telemovel = validations.validar_telemovel("Telemóvel: ")
+	email = validations.validar_email("Email: ")
 
 	# Envia os dados para a base de dados
-	cliente_id = cliente_db.aguardar_cliente(
+	cliente_id = customers_db.aguardar_cliente(
 		nome, data_nascimento, sexo, nif, telemovel, email)
 
 	if cliente_id is not None:
@@ -90,7 +90,7 @@ def listar_clientes():
 	# Consulta e mostra todos os clientes registados
 	print("\n--- LISTA DE CLIENTES ---")
 
-	clientes = cliente_db.obter_todos_clientes()
+	clientes = customers_db.obter_todos_clientes()
 
 	if not clientes:
 		print("Ainda não há clientes registados.")
@@ -105,8 +105,8 @@ def editar_cliente():
 	# Procura o cliente e solicita os novos dados
 	print("\n--- EDITAR CLIENTE ---")
 
-	nif = validacoes.validar_nif("Insira o NIF do cliente: ")
-	cliente = cliente_db.procurar_por_nif(nif)
+	nif = validations.validar_nif("Insira o NIF do cliente: ")
+	cliente = customers_db.procurar_por_nif(nif)
 
 	if cliente is None:
 		print("Cliente não encontrado.")
@@ -116,15 +116,15 @@ def editar_cliente():
 
 	print("\nInsira os novos dados do cliente:")
 
-	nome = validacoes.validar_nome("Nome completo: ")
-	data_nascimento = validacoes.validar_data_nascimento("Data de nascimento (DD/MM/YYYY): ")
-	sexo = validacoes.validar_opcao("Sexo (M/F/O): ", ["M", "F", "O"])
+	nome = validations.validar_nome("Nome completo: ")
+	data_nascimento = validations.validar_data_nascimento("Data de nascimento (DD/MM/YYYY): ")
+	sexo = validations.validar_opcao("Sexo (M/F/O): ", ["M", "F", "O"])
 	nif = pedir_nif_unico(cliente["id"])
-	telemovel = validacoes.validar_telemovel("Telemóvel: ")
-	email = validacoes.validar_email("Email: ")
+	telemovel = validations.validar_telemovel("Telemóvel: ")
+	email = validations.validar_email("Email: ")
 
 	# Atualiza os dados na base de dados
-	atualizado = cliente_db.atualizar_cliente(
+	atualizado = customers_db.atualizar_cliente(
 		cliente["id"], nome, data_nascimento, sexo, nif, telemovel, email
 	)
 
@@ -140,11 +140,11 @@ def pesquisar_cliente():
 	print("1 - Pesquisar por NIF")
 	print("2 - Pesquisar por nome")
 
-	opcao = validacoes.validar_opcao("Escolha uma opção: ", ["1", "2"])
+	opcao = validations.validar_opcao("Escolha uma opção: ", ["1", "2"])
 
 	if opcao == "1":
-		nif = validacoes.validar_nif("Insira o NIF: ")
-		cliente = cliente_db.obter_cliente_por_nif(nif)
+		nif = validations.validar_nif("Insira o NIF: ")
+		cliente = customers_db.obter_cliente_por_nif(nif)
 
 		if cliente:
 			mostrar_cliente(cliente)
@@ -152,7 +152,7 @@ def pesquisar_cliente():
 			print("Cliente não encontrado.")
 	else:
 		nome = input("Insira o nome (ou parte dele): ").strip()
-		clientes = cliente_db.obter_clientes_por_nome(nome)
+		clientes = customers_db.obter_clientes_por_nome(nome)
 
 		if not clientes:
 			print("Nenhum cliente encontrado.")

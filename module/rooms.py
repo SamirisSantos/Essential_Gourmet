@@ -6,10 +6,10 @@
 # • Custo da sala
 
 # Importação de módulos necessários
-from . import sala_db
-from utils import validacoes
+from . import rooms_db
+from utils import validations
 from utils.config import CAPACIDADE_MAXIMA, CAPACIDADE_MINIMA
-from utils import validacoes 
+from utils import validations
 
 def menu_salas():
 	# Menu para realizar ações sobre salas
@@ -22,13 +22,13 @@ def menu_salas():
 		print("0 - Voltar ao menu principal")
 		opcao = input("Escolha uma opção: ").strip()
 		if opcao == "1":
-			validacoes.limpar()
+			validations.limpar()
 			registar_sala()
 		elif opcao == "2":
-			validacoes.limpar()
+			validations.limpar()
 			listar_salas()
 		elif opcao == "3":
-			validacoes.limpar()
+			validations.limpar()
 			editar_sala()
 		elif opcao == "0":
 			break
@@ -40,14 +40,14 @@ def registar_sala():
 	# Solicita ao utilizador os dados da sala e guarda na base de dados
 	print("\n--- REGISTAR SALA ---")
 
-	tematica = validacoes.validar_texto("Temática da sala: ")
+	tematica = validations.validar_texto("Temática da sala: ")
 	# Por regra, uma sala não pode existir sem assentos
-	capacidade = validacoes.validar_inteiro(
+	capacidade = validations.validar_inteiro(
 		"Quantidade de assentos: ", minimo=CAPACIDADE_MINIMA, maximo=CAPACIDADE_MAXIMA)
-	funcionarios = validacoes.validar_texto("Funcionários responsáveis: ")
-	custo = validacoes.validar_decimal("Custo da sala: ")
+	funcionarios = validations.validar_texto("Funcionários responsáveis: ")
+	custo = validations.validar_decimal("Custo da sala: ")
 
-	sala_id = sala_db.inserir_sala(tematica, capacidade, funcionarios, custo)
+	sala_id = rooms_db.inserir_sala(tematica, capacidade, funcionarios, custo)
 
 	if sala_id is not None:
 		print(f"\nSala registada com sucesso! ID: {sala_id}")
@@ -57,7 +57,7 @@ def registar_sala():
 
 def listar_salas():
 	# Lista todas as salas registadas
-	salas = sala_db.obter_todas_salas()
+	salas = rooms_db.obter_todas_salas()
 
 	if not salas:
 		print("Ainda não há salas registadas.")
@@ -76,7 +76,7 @@ def listar_salas():
 def editar_sala():
 	# Pergunta ao utilizador que campos quer alterar
 	# Se não houver salas, não adianta pedir um ID
-	if not sala_db.obter_todas_salas():
+	if not rooms_db.obter_todas_salas():
 		print("Ainda não há salas registadas.")
 		return
 
@@ -84,10 +84,10 @@ def editar_sala():
 
 	# Repete a pergunta até existir uma sala com esse ID (0 para cancelar)
 	while True:
-		sala_id = validacoes.validar_inteiro("ID da sala a editar (0 para cancelar): ", minimo=0)
+		sala_id = validations.validar_inteiro("ID da sala a editar (0 para cancelar): ", minimo=0)
 		if sala_id == 0:
 			return
-		sala = sala_db.obter_sala(sala_id)
+		sala = rooms_db.obter_sala(sala_id)
 		if sala is not None:
 			# Sala encontrada, sai deste ciclo
 			break
@@ -101,27 +101,27 @@ def editar_sala():
 		print(f"3 - Funcionários ({sala['funcionarios']})")
 		print(f"4 - Custo ({sala['custo']:.2f} €)")
 		print("0 - Sair")
-		opcao = validacoes.validar_inteiro("Opção: ", minimo=0, maximo=4)
+		opcao = validations.validar_inteiro("Opção: ", minimo=0, maximo=4)
 
 		if opcao == 0:
 			return
 		elif opcao == 1:
-			sala["tematica"] = validacoes.validar_texto("Nova temática: ")
+			sala["tematica"] = validations.validar_texto("Nova temática: ")
 		elif opcao == 2:
-			sala["capacidade"] = validacoes.validar_inteiro(
+			sala["capacidade"] = validations.validar_inteiro(
 				"Novos assentos: ", minimo=CAPACIDADE_MINIMA, maximo=CAPACIDADE_MAXIMA)
 		elif opcao == 3:
-			sala["funcionarios"] = validacoes.validar_texto("Novos funcionários (separados por vírgula): ")
+			sala["funcionarios"] = validations.validar_texto("Novos funcionários (separados por vírgula): ")
 		else:
-			sala["custo"] = validacoes.validar_decimal("Novo custo da sala: ")
+			sala["custo"] = validations.validar_decimal("Novo custo da sala: ")
 
 		# Grava logo a alteração
-		if sala_db.atualizar_sala(sala["id"], sala["tematica"], sala["capacidade"],
+		if rooms_db.atualizar_sala(sala["id"], sala["tematica"], sala["capacidade"],
 								sala["funcionarios"], sala["custo"]):
 			print("Sala atualizada com sucesso.")
 		else:
 			print("Não foi possível atualizar a sala.")
 
 		# Volta a ler a sala da BD, para o menu mostrar o que está realmente guardado
-		sala = sala_db.obter_sala(sala["id"]) or sala
+		sala = rooms_db.obter_sala(sala["id"]) or sala
 		

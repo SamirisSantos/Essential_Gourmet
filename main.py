@@ -19,8 +19,8 @@ from pathlib import Path
 import os
 
 # Importação dos módulos da aplicação
-from module import cliente, sala, reserva
-from utils import validacoes 
+from module import customers, reservation, rooms
+from utils import validations
 
 # Caminho principal do projeto
 BASE_DIR = Path(__file__).resolve().parent
@@ -87,7 +87,7 @@ def main():
 
 	# Menu principal
 	while True:
-		validacoes.limpar()
+		validations.limpar()
 		print("\n========== ESSÊNCIA GOURMET ==========")
 		print("1 - Gestão de clientes")
 		print("2 - Gestão de salas")
@@ -98,14 +98,14 @@ def main():
 		option = input("Escolha uma opção: ").strip()
 
 		if option == "1":
-			validacoes.limpar()
-			cliente.menu_clientes()
+			validations.limpar()
+			customers.menu_clientes()
 		elif option == "2":
-			validacoes.limpar()
-			sala.menu_salas()
+			validations.limpar()
+			rooms.menu_salas()
 		elif option == "3":
-			validacoes.limpar()
-			reserva.menu_reservas()
+			validations.limpar()
+			customers.menu_reservas()
 		elif option == "0":
 			print("A encerrar a aplicação...")
 			break
