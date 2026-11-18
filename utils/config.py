@@ -21,21 +21,21 @@ DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
 # Arquivo do database
-DB_PATH = DATA_DIR / "data.db"
+DB_PATH = DATA_DIR / "essencia_gourmet.db"
 # Pasta dos log de erro
 LOG_PATH = DATA_DIR / "log.txt" 
 
 # Variveis globais:
 # preco do menu
-MENU_PRICE = 220.0
+PRECO_MENU = 220.0
 # Valor maximo e min da capacidade de cada sala e cadastro de sala
-MIN_CAPACITY = 1
-MAX_CAPACITY = 100
+CAPACIDADE_MINIMA = 1
+CAPACIDADE_MAXIMA = 100
 # Padrao de data e hora utilizado em Portugal
-DATE_FORMAT = "%d/%m/%Y"
-TIME_FORMAT = "%H:%M"
+FORMATO_DATA = "%d/%m/%Y"
+FORMATO_HORA = "%H:%M"
 # Tempo de reserva, tempo em horas
-RESERVATION_DURATION = 3 #hr
+DURACAO_RESERVA = 3 #hr
 
 # --- Formatos de data e hora utilizado pelo datatime
 # --- %Y = Ano (YYYY)

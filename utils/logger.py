@@ -15,8 +15,9 @@ logging.basicConfig(
 	encoding="utf-8",
 )
 
-def register_error(origin, error):
+def registar_erro(origin, error):
 	#Escreve um erro no ficheiro de log.
 	#origin: onde aconteceu (ex: 'rooms.insert_room')
 	#error: o erro apanhado no except
 	logging.error("%s -> %s", origin, error)
+	

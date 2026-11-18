@@ -1,9 +1,17 @@
 # Esse arquivo contem as funções de validações de input inciais
 
+import os
+import platform
 from datetime import datetime
-from utils.config import DATE_FORMAT, TIME_FORMAT
+from utils.config import FORMATO_DATA, FORMATO_HORA
 
-def valid_text(text):
+def limpar():
+	if platform.system() == 'Windows':
+		os.system('cls')
+	else:
+		os.system('clear')
+
+def validar_texto(text):
 	#Solicita um texto que nao esteja vazio,
 	# enquanto for vazio repeti a pergunta ate da um texto valido
 	while True:
@@ -25,7 +33,7 @@ def valid_text(text):
 # --- preços de produtos, sendo eles das salas tematicas e no menu
 # --- Esses valores não pode ser menor que zero.
 
-def valid_decimal(text):
+def validar_decimal(text):
 	#Recebe qualquer tipo de entrada de decimal, com virgula ou ponto
 	#Como por exemplo 5.4 ou 5,4
 	#Garantido a usabildade do sistema
@@ -72,7 +80,7 @@ def valid_decimal(text):
 		#Depois de tratar todo o numero vamos converte para float
 		return float(value)
 
-def valid_integer(text, min=None, max=None):
+def validar_inteiro(text, minimo=None, maximo=None):
 	#Valida se a entrada do usuário é um inteiro positivo valido,
 	#Caso tenha quantidade limite, 
 	# como: quantidade de assentos e quantidade pessoas por reserva
@@ -93,10 +101,10 @@ def valid_integer(text, min=None, max=None):
 		# essa condição valida isso,
 		# como o valor minino de pessoa para reserva é 1 e maximo é 8
 		# mas se nao exista o limite, o valor default é none
-		if min is not None and num < min:
-			print (f"Insira o valor igual ou maior que: {min}")
-		elif max is not None and num > max:
-			print (f"Insira o valor igual ou menor que: {max}")
+		if minimo is not None and num < minimo:
+			print (f"Insira o valor igual ou maior que: {minimo}")
+		elif maximo is not None and num > maximo:
+			print (f"Insira o valor igual ou menor que: {maximo}")
 		else:
 			return num
 
@@ -118,14 +126,14 @@ def valid_integer(text, min=None, max=None):
 #  DATE_FORMAT variavel global configurada em config.py
 #  TIME_FORMAT variavel global configurada em config.py
 
-def valid_date(text):
+def validar_data(text):
 	#Essa função valida a entrada de data 
 	while True:
 		value = input(text).strip()
 		try:
 			# Aqui verifica se o formato passado pelo utilizador segue os formato DD/MM/YYYY
 			# strptime() converte texto em data/hora e valida
-			date = datetime.strptime(value,  DATE_FORMAT)
+			date = datetime.strptime(value,  FORMATO_DATA)
 			# Converte para o formato valido do banco de dados
 			# strftime() converte data/hora em texto no formato pretendido
 			return date.strftime("%Y-%m-%d")
@@ -134,13 +142,13 @@ def valid_date(text):
 			# e mostra como deve ser inserido a data
 			print("Data inválida! Use o formato DD/MM/YYYY.")
 
-def valid_time(text):
+def validar_hora(text):
 	#Essa função valida a entrada de hora
 	# Segue a mesma logica da função valid_date
 	while True:
 		value = input(text).strip()
 		try:
-			time = datetime.strptime(value,TIME_FORMAT)
+			time = datetime.strptime(value,FORMATO_HORA)
 			return time.strftime("%H:%M:%S")
 		except ValueError:
 			print("Hora inválida! Use o formato HH:MM.")
@@ -149,7 +157,7 @@ def valid_time(text):
 # --- A função abaixo vai verificar as opções usadas
 # --- Como por exemplo SEXO: M, F, O, fora isso nao é valido
 
-def valid_option(text, op):
+def validar_opcao(text, op):
 	# recebe a mensagem para input e a lista de opção
 	while True:
 		# upper() Deixa a str maiúscula
@@ -162,10 +170,10 @@ def valid_option(text, op):
 
 # --- As funções abaixo vão verificar os dados especificos dos clientes
 
-def valid_name(text):
+def validar_nome(text):
 	#Valida o nome do cliente
 	while True:
-		value = valid_text(text)
+		value = validar_texto(text)
 		#O nome deve ter pelo menos 3 caracteres e conter apenas letras e espaços
 		if len(value) < 3 or not all(char.isalpha() or char.isspace() for char in value):
 			print("Nome inválido. Insira um nome com pelo menos 3 letras.")
@@ -175,10 +183,10 @@ def valid_name(text):
 			return value
 
 
-def valid_birth_date(text):
+def validar_data_nascimento(text):
 	#Valida a data de nascimento e a idade do cliente
 	while True:
-		value = valid_date(text)
+		value = validar_data(text)
 		#Converte a data recebida para conseguir calcular a idade
 		birth_date = datetime.strptime(value, "%Y-%m-%d")
 		today = datetime.now()
@@ -197,50 +205,33 @@ def valid_birth_date(text):
 			return value
 
 
-def valid_nif(text):
+def validar_nif(text):
 	#Valida o NIF do cliente
 	while True:
-		value = valid_text(text)
+		value = validar_texto(text)
 		#O NIF deve ter exatamente 9 digitos
 		if len(value) != 9 or not value.isdecimal():
 			print("NIF inválido. Deve conter 9 dígitos.")
 			continue
-		#O primeiro digito deve pertencer aos prefixos válidos
-		if value[0] not in "1235689":
-			print("NIF inválido.")
-			continue
-
-		#Calcula o digito de controlo do NIF
-		total = 0
-		for i in range(8):
-			total += int(value[i]) * (9 - i)
-
-		check_digit = 11 - (total % 11)
-		if check_digit >= 10:
-			check_digit = 0
-		if check_digit != int(value[8]):
-			print("NIF inválido. Verifique os dígitos inseridos.")
 		else:
 			return value
 
 
-def valid_phone(text):
+def validar_telemovel(text):
 	#Valida o número de telemóvel do cliente
 	while True:
-		value = valid_text(text)
+		value = validar_texto(text)
 		#O telemóvel deve conter 9 digitos e começar com um prefixo válido
 		if len(value) != 9 or not value.isdecimal():
 			print("Telemóvel inválido. Deve conter 9 dígitos.")
-		elif value[:2] not in ("91", "92", "93", "96"):
-			print("Prefixo de telemóvel inválido.")
 		else:
 			return value
 
 
-def valid_email(text):
+def validar_email(text):
 	#Valida o email do cliente
 	while True:
-		value = valid_text(text)
+		value = validar_texto(text)
 		#Verifica se o email tem os elementos básicos
 		if " " in value or "@" not in value:
 			print("Email inválido.")
